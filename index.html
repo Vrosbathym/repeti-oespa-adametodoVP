@@ -32,7 +32,7 @@
     }
     </script>
 </head>
-<body class="bg-slate-900 text-slate-200"> {/* Dark Theme: Fundo Escuro, Texto Claro */}
+<body class="bg-slate-900 text-slate-200">
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react,typescript" data-type="module">
@@ -40,6 +40,7 @@
       import ReactDOM from 'react-dom/client';
       import { GoogleGenAI } from "@google/genai";
       import jsPDF from 'jspdf';
+      
       const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/build/pdf.mjs");
       GlobalWorkerOptions.workerSrc = "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
 
@@ -92,9 +93,9 @@
       // --- END OF ICON COMPONENTS ---
 
       // --- START OF geminiAIService.ts LOGIC ---
-      // (Mantido como no seu arquivo index (1).html - prompt, nome do modelo, etc.)
       const geminiModelName = "gemini-2.5-flash-preview-04-17";
       async function generateSummaryService(content) {
+        // ... (Lógica do generateSummaryService, incluindo o prompt, permanece a mesma da versão anterior) ...
         if (!content || typeof content !== 'string' || !content.trim()) {
           throw new Error("O conteúdo fornecido para análise está vazio ou é inválido. Por favor, insira ou anexe um texto válido.");
         }
@@ -188,6 +189,7 @@ ${content}
       // --- END OF geminiAIService.ts LOGIC ---
 
       // --- START OF UI COMPONENTS ---
+      // (LoadingIndicator, ErrorMessageDisplay, ApiKeyModal, SummaryOutputArea, ContentInputArea - toda a lógica interna e a maioria dos estilos de layout permanecem, apenas cores e alguns detalhes visuais são ajustados para o tema dark como na resposta anterior)
       const LoadingIndicator = () => (
         <div className="flex flex-col items-center justify-center p-8 bg-slate-800 shadow-xl rounded-xl border border-slate-700">
           <svg className="animate-spin h-10 w-10 text-sky-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -243,15 +245,16 @@ ${content}
       };
 
       const SummaryOutputArea = ({ summary }) => {
+        // ... (Lógica interna de SummaryOutputArea, incluindo handleDownloadPdf, permanece a mesma da versão anterior com tema dark)
         const [copied, setCopied] = useState(false);
         const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
         const handleCopy = async () => { try { await navigator.clipboard.writeText(summary); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch (err) { console.error("Failed to copy text: ", err); alert("Erro ao copiar texto. Tente manualmente."); } };
         
         const addPdfFooterInternal = (pdfInstance, pageHeight, pageWidth, marginValue) => {
             const originalFontSize = pdfInstance.getFontSize(); const originalFont = pdfInstance.getFont();
-            pdfInstance.setFontSize(9); pdfInstance.setFont('helvetica', 'italic'); pdfInstance.setTextColor(120); // Cinza para rodapé
+            pdfInstance.setFontSize(9); pdfInstance.setFont('helvetica', 'italic'); pdfInstance.setTextColor(120);
             pdfInstance.text("Gerado por Sentio AI - Vinicius de Paiva Marti", pageWidth / 2, pageHeight - marginValue / 2, { align: 'center' });
-            pdfInstance.setFontSize(originalFontSize); pdfInstance.setFont(originalFont.fontName, originalFont.fontStyle); pdfInstance.setTextColor(50, 50, 50); // Reset para cor de texto padrão do PDF
+            pdfInstance.setFontSize(originalFontSize); pdfInstance.setFont(originalFont.fontName, originalFont.fontStyle); pdfInstance.setTextColor(50, 50, 50);
         };
 
         const handleDownloadPdf = async () => {
@@ -337,7 +340,7 @@ ${content}
                 const match = trimmedLine.match(/^(\s*)(\d+\.)\s(.*)/); 
                 if (match) { 
                   const [, sp, num, txt] = match; 
-                  const indent = margin + (sp.length * 5); // Ajuste de indentação para listas numeradas
+                  const indent = margin + (sp.length * 5); 
                   pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
                   yPosition = addFooterAndNewPageIfNeeded(yPosition); 
                   pdf.text(num, indent , yPosition); 
@@ -380,13 +383,13 @@ ${content}
                 <button 
                   onClick={handleDownloadPdf} 
                   disabled={isDownloadingPdf || !summary} 
-                  className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-800 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg shadow-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                  className="flex items-center px-4 py-2 border border-sky-500 text-sky-400 hover:bg-sky-500 hover:text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                   {isDownloadingPdf ? (<><svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Gerando...</>) : (<><DownloadIcon className="h-5 w-5 mr-2" />Baixar PDF</>)}
                 </button>
                 <button 
                   onClick={handleCopy} 
                   disabled={isDownloadingPdf} 
-                  className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-800 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg shadow-sm transition-colors duration-200 disabled:opacity-50">
+                  className="flex items-center px-4 py-2 border border-sky-500 text-sky-400 hover:bg-sky-500 hover:text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 transition-all duration-200 disabled:opacity-50">
                   {copied ? (<><CheckCircleIcon className="h-5 w-5 mr-2 text-green-400" />Copiado!</>) : (<><ClipboardIcon className="h-5 w-5 mr-2" />Copiar</>)}
                 </button>
               </div>
@@ -557,11 +560,17 @@ ${content}
         const toggleApiKeyModal = () => setIsApiKeyModalOpen(!isApiKeyModalOpen);
 
         return (
-          <div className="min-h-screen flex flex-col items-center p-4 sm:p-8 selection:bg-sky-500/30 selection:text-sky-300">
+          <div className="min-h-screen flex flex-col items-center p-4 sm:p-8 selection:bg-sky-500/30 selection:text-sky-300 bg-slate-900 text-slate-200">
             <header className="w-full max-w-4xl mb-10 text-center">
               <div className="flex items-center justify-center mb-3 relative">
-                <img src="logo.png" alt="Sentio AI Logo" className="h-10 w-auto mr-4" /> {/* Aumentei um pouco o margin-right */}
-                <h1 className="text-4xl sm:text-5xl font-bold text-slate-100">Sentio AI</h1>
+                <img 
+                  src="logo.png" 
+                  alt="Sentio AI Logo" 
+                  className="h-10 w-auto mr-3" /* Estilo simples para o logo */
+                />
+                <h1 className="text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500">
+                  Sentio AI
+                </h1>
                 <button 
                   onClick={toggleApiKeyModal} 
                   className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-sky-400 transition-colors" 
@@ -573,13 +582,13 @@ ${content}
               </div>
               <p className="text-lg text-slate-400">Inteligência textual que eleva seu aprendizado e sua capacidade de análise.</p>
             </header>
-            <main className="w-full max-w-4xl space-y-10"> {/* Aumentei o space-y */}
+            <main className="w-full max-w-4xl space-y-10">
               <ContentInputArea inputText={inputText} onInputChange={setInputText} onSummarize={handleSummarize} isLoading={isLoading} isApiKeySet={userApiKeyExists} onConfigureApiKeyClick={toggleApiKeyModal} />
               {isLoading && <LoadingIndicator />}
               {error && <ErrorMessageDisplay message={error} />}
               {summary && !isLoading && <SummaryOutputArea summary={summary} />}
             </main>
-            <footer className="w-full max-w-4xl mt-20 text-center text-slate-500 text-sm"> {/* Aumentei o margin-top */}
+            <footer className="w-full max-w-4xl mt-20 text-center text-slate-500 text-sm">
                 <p>&copy; {new Date().getFullYear()} Sentio AI. Todos os direitos reservados.</p>
                 <p className="mt-1">Desenvolvido por Vinicius de Paiva Marti.</p>
             </footer>
