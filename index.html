@@ -522,7 +522,7 @@ ${content}
               {error && <ErrorMessageDisplay message={error} />}
               {summary && !isLoading && <SummaryOutputArea summary={summary} />}
             </main>
-            <footer className="w-full max-w-4xl mt-12 text-center text-slate-500 text-sm"><p>&copy; {new Date().getFullYear()} Síntese AI. Potencializado por Gemini API.</p><p className="mt-1">Desenvolvido por Vinicius de Paiva Marti.</p></footer>
+            <footer className="w-full max-w-4xl mt-12 text-center text-slate-500 text-sm"><p>&copy; {new Date().getFullYear()} Síntese AI. Desenvolvido por Vinicius de Paiva Marti.</footer>
             <ApiKeyModal isOpen={isApiKeyModalOpen} onClose={toggleApiKeyModal} onApiKeyUpdated={handleApiKeyUpdated} />
           </div>
         );
