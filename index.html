@@ -1,28 +1,43 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sentio AI</title>
     <link rel="icon" href="logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        <style>
-  body {
-    font-family: 'Inter', sans-serif;
-    background-image: url('fundo.png');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    min-height: 100vh;
-  }
-  /* O overlay está comentado, então não deve causar problemas */
-  /* body::before { ... } */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-  @keyframes modal-scale-in { /* ... */ }
-  .animate-modal-scale-in { /* ... */ }
-</style>
+      /* @import deve vir primeiro */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-image: url('fundo.png');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+      }
+      /* Opcional Overlay Comentado */
+      /* body::before {
+        content: "";
+        position: fixed; 
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(22, 33, 55, 0.3); 
+        z-index: -1; 
+      }
+      */
+      @keyframes modal-scale-in {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-modal-scale-in {
+          animation: modal-scale-in 0.3s forwards cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+    </style>
     <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
     <script type="importmap">
     {
@@ -36,6 +51,31 @@
       }
     }
     </script>
+</head>
+<body class="text-slate-200"> {/* A cor de texto padrão ainda é útil */}
+    <div id="root"></div>
+
+    {/* SEU SCRIPT BABEL COMPLETO VEM AQUI, SEM ALTERAÇÕES INTERNAS NELE POR ENQUANTO */}
+    <script type="text/babel" data-presets="react,typescript" data-type="module">
+      // ... todo o seu código React/JavaScript ...
+      // Exemplo:
+      import React, { useState, useCallback, useEffect, useRef } from 'react';
+      import ReactDOM from 'react-dom/client';
+      // ... etc ...
+
+      // Lembre-se da configuração do PDF.js worker:
+      // const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/build/pdf.mjs");
+      // GlobalWorkerOptions.workerSrc = "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
+
+      // ... resto dos seus componentes e lógica ...
+
+      const rootElement = document.getElementById('root');
+      if (!rootElement) { throw new Error("Root element not found"); }
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(<App />);
+    </script>
+</body>
+</html>
 </head>
 {/* Classes de fundo anteriores removidas, agora controladas pelo <style> acima. Mantido text-slate-200 */}
 <body class="text-slate-200">
