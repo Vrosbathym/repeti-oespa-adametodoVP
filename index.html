@@ -32,7 +32,7 @@
     }
     </script>
 </head>
-<body class="bg-gray-50 text-gray-800"> {/* Estilo Minimalista: Fundo Cinza Claro, Texto Escuro */}
+<body class="bg-slate-900 text-slate-200"> {/* Dark Theme: Fundo Escuro, Texto Claro */}
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react,typescript" data-type="module">
@@ -40,13 +40,10 @@
       import ReactDOM from 'react-dom/client';
       import { GoogleGenAI } from "@google/genai";
       import jsPDF from 'jspdf';
-      // Importando PDF.js e configurando o workerSrc com URL direto
       const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/build/pdf.mjs");
       GlobalWorkerOptions.workerSrc = "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
 
       // --- START OF ICON COMPONENTS ---
-      // Ícones SVG como no seu arquivo original, mas KeyIcon será usado no modal e no botão de configurar API no header.
-      // BrainCircuitIcon será substituído pelo logo.png
       const BookOpenIcon = (props) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
@@ -95,20 +92,17 @@
       // --- END OF ICON COMPONENTS ---
 
       // --- START OF geminiAIService.ts LOGIC ---
-      // Usando o nome do modelo do seu arquivo original
+      // (Mantido como no seu arquivo index (1).html - prompt, nome do modelo, etc.)
       const geminiModelName = "gemini-2.5-flash-preview-04-17";
       async function generateSummaryService(content) {
         if (!content || typeof content !== 'string' || !content.trim()) {
           throw new Error("O conteúdo fornecido para análise está vazio ou é inválido. Por favor, insira ou anexe um texto válido.");
         }
-
         const userApiKey = localStorage.getItem('userGeminiApiKey');
         if (!userApiKey) {
           throw new Error("Nenhuma chave de API do Gemini foi configurada. Por favor, clique no ícone de chave 🔑 para adicionar sua chave.");
         }
-        const ai = new GoogleGenAI({ apiKey: userApiKey }); // Sua inicialização original
-
-        // Prompt do seu arquivo index (1).html, que já pede 10 questões e tem instruções sobre o gabarito
+        const ai = new GoogleGenAI({ apiKey: userApiKey });
         const promptText = `
 Você é um assistente de IA especializado em criar materiais de estudo e apresentação com formatação profissional.
 Sua tarefa é analisar o texto fornecido e gerar dois tipos de material:
@@ -144,12 +138,9 @@ ${content}
         try {
           const response = await ai.models.generateContent({ model: geminiModelName, contents: promptText });
           let processedText = response.text;
-
           if (processedText === undefined || processedText === null) {
             throw new Error("A API não retornou texto na resposta (response.text está vazio ou nulo).");
           }
-          
-          // Seu pós-processamento original
           const specificPrefixPattern = /^Okay, aqui está o resumo detalhado baseado no texto fornecido,.*?elaboração de respostas dissertativas:\s*\n?(?:\*\*(.*?)\*\*\s*?\n?)?/im;
           processedText = processedText.replace(specificPrefixPattern, "").trimStart();
           const commonIntros = ["Aqui está o resumo detalhado e estruturado:", "Claro, aqui está o resumo no formato solicitado:"];
@@ -160,8 +151,6 @@ ${content}
               break;
             }
           }
-          
-          // Ajuste sutil no pós-processamento para o novo prompt: se não começar com ## E tiver ## E não for já a seção de perguntas
           if (!processedText.startsWith("## ") && processedText.includes("## ") && 
               (!processedText.includes("### Perguntas de Revisão") || processedText.indexOf("## ") < processedText.indexOf("### Perguntas de Revisão"))) {
             const lines = processedText.split('\n');
@@ -169,17 +158,12 @@ ${content}
             for (let i = 0; i < lines.length; i++) {
               if (lines[i].startsWith("## ")) { firstHeadingIndex = i; break; }
             }
-            if (firstHeadingIndex > 0) { // Só remove o início se houver algo antes do primeiro "##"
+            if (firstHeadingIndex > 0) {
                 processedText = lines.slice(firstHeadingIndex).join('\n');
-            } else if (firstHeadingIndex === 0) {
-                // Já começa com "##", não faz nada
             }
           } else if (!processedText.startsWith("## ") && !processedText.includes("## ") && !processedText.includes("### Perguntas de Revisão")) {
-            // Se não encontrar nenhum ## e não for a seção de perguntas, pode ser um problema ou a IA não seguiu o formato.
             console.warn("AI response does not start with '## ' and no '## ' found before questions. Outputting as received.");
           }
-
-
           if (processedText && processedText.trim()) { return processedText.trim(); }
           else { throw new Error("A API não retornou nenhum conteúdo de material de estudo útil após o processamento."); }
         } catch (error) {
@@ -205,15 +189,15 @@ ${content}
 
       // --- START OF UI COMPONENTS ---
       const LoadingIndicator = () => (
-        <div className="flex flex-col items-center justify-center p-8 bg-white shadow-lg rounded-xl border border-gray-200">
-          <svg className="animate-spin h-10 w-10 text-sky-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <p className="text-gray-700 text-lg">Gerando material de estudo...</p><p className="text-gray-500 text-sm">Isso pode levar alguns instantes.</p>
+        <div className="flex flex-col items-center justify-center p-8 bg-slate-800 shadow-xl rounded-xl border border-slate-700">
+          <svg className="animate-spin h-10 w-10 text-sky-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <p className="text-slate-300 text-lg">Gerando material de estudo...</p><p className="text-slate-400 text-sm">Isso pode levar alguns instantes.</p>
         </div>
       );
 
       const ErrorMessageDisplay = ({ message }) => (
-        <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg relative shadow-md" role="alert">
-          <div className="flex items-center"><ExclamationTriangleIcon className="h-6 w-6 text-red-500 mr-3" /><div><strong className="font-bold">Ocorreu um Erro!</strong><span className="block sm:inline ml-1">{message}</span></div></div>
+        <div className="bg-red-900/50 border border-red-700/80 text-red-300 px-4 py-3 rounded-lg relative shadow-lg" role="alert">
+          <div className="flex items-center"><ExclamationTriangleIcon className="h-6 w-6 text-red-400 mr-3" /><div><strong className="font-bold">Ocorreu um Erro!</strong><span className="block sm:inline ml-1">{message}</span></div></div>
         </div>
       );
 
@@ -245,14 +229,14 @@ ${content}
 
         if (!isOpen) return null;
         return (
-          <div className="fixed inset-0 bg-gray-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 ease-out animate-modal-scale-in" onClick={onClose} role="dialog">
-            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-200 w-full max-w-md transform transition-all duration-300 ease-out" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6"><div className="flex items-center"><KeyIcon className="h-7 w-7 text-sky-500 mr-3" /><h2 className="text-2xl font-semibold text-gray-800">Configurar Chave de API</h2></div><button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100" aria-label="Fechar modal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-              {currentApiKeyMasked && saveStatus !== 'success' && (<div className="mb-4 p-3 bg-gray-100 rounded-lg"><p className="text-sm text-gray-500">Chave de API atual:</p><p className="text-lg text-sky-600 font-mono tracking-wider">{currentApiKeyMasked}</p><button onClick={handleClearKey} className="mt-2 text-xs text-amber-600 hover:text-amber-700 hover:underline">Limpar Chave Salva</button></div>)}
-              {saveStatus !== 'success' && (<div className="space-y-4"><p className="text-gray-600 text-sm">{currentApiKeyMasked ? "Para alterar, insira uma nova chave abaixo." : "Insira sua chave de API do Google Gemini para começar a usar o aplicativo."}</p><div><label htmlFor="apiKeyInput" className="block text-sm font-medium text-gray-700 mb-1">Sua Chave de API Gemini</label><input type="password" id="apiKeyInput" value={apiKeyInput} onChange={(e) => { setApiKeyInput(e.target.value); if(saveStatus !== 'idle') setSaveStatus('idle'); if(errorMessage) setErrorMessage(null); }} placeholder="Cole sua chave aqui" className="w-full p-3 bg-gray-50 text-gray-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400" /></div><button onClick={handleSaveKey} className="w-full flex items-center justify-center px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">Salvar Chave</button></div>)}
-              {saveStatus === 'success' && (<div id="api-key-status" className="mt-4 p-4 bg-green-50 border border-green-300 rounded-lg text-center"><CheckCircleIcon className="h-8 w-8 text-green-500 mx-auto mb-2" /><p className="text-green-700 font-medium">Chave de API salva com sucesso!</p></div>)}
-              {saveStatus === 'error' && errorMessage && (<div id="api-key-status" className="mt-4 p-4 bg-red-50 border border-red-300 rounded-lg text-center"><ExclamationTriangleIcon className="h-8 w-8 text-red-500 mx-auto mb-2" /><p className="text-red-700 font-medium">{errorMessage}</p></div>)}
-              <p className="mt-6 text-xs text-gray-500 text-center">Sua chave de API é armazenada apenas no seu navegador. Obtenha uma chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">Google AI Studio</a>.</p>
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 transition-opacity duration-300 ease-out animate-modal-scale-in" onClick={onClose} role="dialog">
+            <div className="bg-slate-800 p-6 sm:p-8 rounded-xl shadow-2xl border border-slate-700 w-full max-w-md transform transition-all duration-300 ease-out" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6"><div className="flex items-center"><KeyIcon className="h-7 w-7 text-sky-400 mr-3" /><h2 className="text-2xl font-semibold text-slate-100">Configurar Chave de API</h2></div><button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300 rounded-full hover:bg-slate-700 transition-colors" aria-label="Fechar modal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+              {currentApiKeyMasked && saveStatus !== 'success' && (<div className="mb-4 p-3 bg-slate-700/60 rounded-lg"><p className="text-sm text-slate-400">Chave de API atual:</p><p className="text-lg text-sky-300 font-mono tracking-wider">{currentApiKeyMasked}</p><button onClick={handleClearKey} className="mt-2 text-xs text-amber-400 hover:text-amber-300 hover:underline">Limpar Chave Salva</button></div>)}
+              {saveStatus !== 'success' && (<div className="space-y-4"><p className="text-slate-400 text-sm">{currentApiKeyMasked ? "Para alterar, insira uma nova chave abaixo." : "Insira sua chave de API do Google Gemini para começar a usar o aplicativo."}</p><div><label htmlFor="apiKeyInput" className="block text-sm font-medium text-slate-300 mb-1">Sua Chave de API Gemini</label><input type="password" id="apiKeyInput" value={apiKeyInput} onChange={(e) => { setApiKeyInput(e.target.value); if(saveStatus !== 'idle') setSaveStatus('idle'); if(errorMessage) setErrorMessage(null); }} placeholder="Cole sua chave aqui" className="w-full p-3 bg-slate-700 text-slate-100 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-slate-500" /></div><button onClick={handleSaveKey} className="w-full flex items-center justify-center px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 transition-all">Salvar Chave</button></div>)}
+              {saveStatus === 'success' && (<div id="api-key-status" className="mt-4 p-4 bg-green-800/40 border border-green-600 rounded-lg text-center"><CheckCircleIcon className="h-8 w-8 text-green-400 mx-auto mb-2" /><p className="text-green-300 font-medium">Chave de API salva com sucesso!</p></div>)}
+              {saveStatus === 'error' && errorMessage && (<div id="api-key-status" className="mt-4 p-4 bg-red-900/40 border border-red-700 rounded-lg text-center"><ExclamationTriangleIcon className="h-8 w-8 text-red-400 mx-auto mb-2" /><p className="text-red-300 font-medium">{errorMessage}</p></div>)}
+              <p className="mt-6 text-xs text-slate-500 text-center">Sua chave de API é armazenada apenas no seu navegador. Obtenha uma chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">Google AI Studio</a>.</p>
             </div>
           </div>
         );
@@ -265,16 +249,16 @@ ${content}
         
         const addPdfFooterInternal = (pdfInstance, pageHeight, pageWidth, marginValue) => {
             const originalFontSize = pdfInstance.getFontSize(); const originalFont = pdfInstance.getFont();
-            pdfInstance.setFontSize(9); pdfInstance.setFont('helvetica', 'italic'); pdfInstance.setTextColor(150); // Cinza mais claro para rodapé
+            pdfInstance.setFontSize(9); pdfInstance.setFont('helvetica', 'italic'); pdfInstance.setTextColor(120); // Cinza para rodapé
             pdfInstance.text("Gerado por Sentio AI - Vinicius de Paiva Marti", pageWidth / 2, pageHeight - marginValue / 2, { align: 'center' });
-            pdfInstance.setFontSize(originalFontSize); pdfInstance.setFont(originalFont.fontName, originalFont.fontStyle); pdfInstance.setTextColor(0); // Reset para preto
+            pdfInstance.setFontSize(originalFontSize); pdfInstance.setFont(originalFont.fontName, originalFont.fontStyle); pdfInstance.setTextColor(50, 50, 50); // Reset para cor de texto padrão do PDF
         };
 
         const handleDownloadPdf = async () => {
           if (!summary) return; setIsDownloadingPdf(true);
           try {
             const pdf = new jsPDF('p', 'pt', 'a4'); const pageHeight = pdf.internal.pageSize.getHeight(); const pageWidth = pdf.internal.pageSize.getWidth(); const margin = 40; const contentWidth = pageWidth - 2 * margin; const footerSpace = 30; let yPosition = margin;
-            const baseFontSize = 11; const h1FontSize = 18; const h2FontSize = 14; const h3FontSize = 12; const lineHeightMultiplier = 1.45; const paragraphSpacing = baseFontSize * 0.7;
+            const baseFontSize = 10; const h1FontSize = 16; const h2FontSize = 13; const lineHeightMultiplier = 1.4; const paragraphSpacing = baseFontSize * 0.6;
             
             const addFooterAndNewPageIfNeeded = (currentY, itemHeight = baseFontSize * lineHeightMultiplier) => { 
               if (currentY + itemHeight > pageHeight - margin - footerSpace) { 
@@ -290,12 +274,12 @@ ${content}
 
             for (const line of summaryLines) {
               const trimmedLine = line.trimEnd(); 
-              pdf.setFont('helvetica', 'normal'); pdf.setFontSize(baseFontSize); pdf.setTextColor(50, 50, 50); // Texto padrão cinza escuro
+              pdf.setFont('helvetica', 'normal'); pdf.setFontSize(baseFontSize); pdf.setTextColor(30, 30, 30);
 
-              if (trimmedLine.startsWith("## Gabarito") || trimmedLine.startsWith("### Gabarito")) { // Detecção de início do Gabarito
+              if (trimmedLine.toLowerCase().startsWith("## gabarito") || trimmedLine.toLowerCase().startsWith("### gabarito")) {
                 isGabaritoSection = true;
-                yPosition = addFooterAndNewPageIfNeeded(yPosition, h2FontSize * lineHeightMultiplier * 2); // Espaço extra e possível nova página
-                pdf.addPage(); // Força nova página para o gabarito
+                yPosition = addFooterAndNewPageIfNeeded(yPosition, h2FontSize * lineHeightMultiplier * 2); 
+                pdf.addPage(); 
                 yPosition = margin;
                 
                 const title = "Gabarito";
@@ -304,7 +288,7 @@ ${content}
                 yPosition = addFooterAndNewPageIfNeeded(yPosition, dims.h * lineHeightMultiplier);
                 pdf.text(title, margin, yPosition, {maxWidth: contentWidth});
                 yPosition += dims.h * lineHeightMultiplier + paragraphSpacing;
-                continue; // Pula o processamento normal da linha de título do gabarito
+                continue; 
               }
 
               if (trimmedLine.startsWith("## ")) { 
@@ -316,20 +300,20 @@ ${content}
                 yPosition += dims.h * lineHeightMultiplier + paragraphSpacing; 
               } else if (trimmedLine.startsWith("### ")) { 
                 const title = trimmedLine.substring(4).trim(); 
-                pdf.setFontSize(h2FontSize); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(20,20,20);
+                pdf.setFontSize(h2FontSize); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(10,10,10);
                 const dims = pdf.getTextDimensions(title, {maxWidth: contentWidth, fontSize: h2FontSize}); 
                 yPosition = addFooterAndNewPageIfNeeded(yPosition, dims.h * lineHeightMultiplier); 
                 pdf.text(title, margin, yPosition, {maxWidth: contentWidth}); 
                 yPosition += dims.h * lineHeightMultiplier + paragraphSpacing * 0.8; 
               } else if (trimmedLine.startsWith("---")) { 
                  yPosition = addFooterAndNewPageIfNeeded(yPosition, 15 + paragraphSpacing * 0.3);
-                 pdf.setDrawColor(200, 200, 200); 
+                 pdf.setDrawColor(150, 150, 150); 
                  pdf.line(margin, yPosition, pageWidth - margin, yPosition);
                  yPosition += 15 + paragraphSpacing * 0.3;
               } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) { 
                 const leadingSpacesCount = (trimmedLine.match(/^(\s*)(-|\*)\s/) || ["", ""])[1].length; 
                 let itemText = trimmedLine.substring(leadingSpacesCount + 2); 
-                const indent = margin + 20 + (leadingSpacesCount * 12); 
+                const indent = margin + 15 + (leadingSpacesCount * 10); 
                 let isBold = false; 
                 const boldMatch = itemText.match(/^\*\*(.*?)\*\*$/); 
                 if (boldMatch && boldMatch[1]) { itemText = boldMatch[1]; isBold = true; }
@@ -337,20 +321,23 @@ ${content}
                 pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', isBold ? 'bold' : 'normal'); 
                 const bullet = "•"; 
                 yPosition = addFooterAndNewPageIfNeeded(yPosition); 
-                pdf.text(bullet, indent - 12, yPosition); // Ajuste do bullet
+                pdf.text(bullet, indent - 10, yPosition);
                 
                 const itemLines = pdf.splitTextToSize(itemText, contentWidth - (indent - margin) - pdf.getTextWidth(bullet + "  "));
                 for (let i = 0; i < itemLines.length; i++) { 
-                  if (i > 0) yPosition = addFooterAndNewPageIfNeeded(yPosition);
+                  if (i > 0) {
+                    yPosition += baseFontSize * lineHeightMultiplier;
+                    yPosition = addFooterAndNewPageIfNeeded(yPosition);
+                  }
                   pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
                   pdf.text(itemLines[i], indent, yPosition); 
-                  yPosition += baseFontSize * lineHeightMultiplier;
                 }
+                yPosition += baseFontSize * lineHeightMultiplier;
               } else if (trimmedLine.match(/^\s*\d+\.\s/)) { 
                 const match = trimmedLine.match(/^(\s*)(\d+\.)\s(.*)/); 
                 if (match) { 
                   const [, sp, num, txt] = match; 
-                  const indent = margin + (sp.length * 10); 
+                  const indent = margin + (sp.length * 5); // Ajuste de indentação para listas numeradas
                   pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
                   yPosition = addFooterAndNewPageIfNeeded(yPosition); 
                   pdf.text(num, indent , yPosition); 
@@ -358,10 +345,13 @@ ${content}
                   const questionTextIndent = indent + pdf.getTextWidth(num + " ");
                   const itemLines = pdf.splitTextToSize(txt, contentWidth - (questionTextIndent - margin)); 
                   for(let i=0; i < itemLines.length; i++) { 
-                    if (i > 0) yPosition = addFooterAndNewPageIfNeeded(yPosition);
+                    if (i > 0) {
+                        yPosition += baseFontSize * lineHeightMultiplier;
+                        yPosition = addFooterAndNewPageIfNeeded(yPosition);
+                    }
                     pdf.text(itemLines[i], questionTextIndent, yPosition); 
-                    yPosition += baseFontSize * lineHeightMultiplier;
                   }
+                  yPosition += baseFontSize * lineHeightMultiplier;
                 }
               } else if (trimmedLine) { 
                 const textLines = pdf.splitTextToSize(trimmedLine, contentWidth); 
@@ -372,7 +362,7 @@ ${content}
                 } 
                 yPosition += paragraphSpacing * 0.5;
               } else { 
-                yPosition = addFooterAndNewPageIfNeeded(yPosition, baseFontSize * 0.5); // Smaller space for empty line
+                yPosition = addFooterAndNewPageIfNeeded(yPosition, baseFontSize * 0.5); 
                 yPosition += baseFontSize * 0.5 * lineHeightMultiplier; 
               }
             }
@@ -381,21 +371,27 @@ ${content}
           } catch (e) { console.error("PDF gen error:", e); alert("Erro ao gerar PDF."); } finally { setIsDownloadingPdf(false); }
         };
         return (
-          <div className="bg-white shadow-lg rounded-xl p-6 sm:p-8 border border-gray-200">
+          <div className="bg-slate-800 shadow-xl rounded-xl p-6 sm:p-8 border border-slate-700">
             <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3 sm:gap-0">
-              <div className="flex items-center"><DocumentTextIcon className="h-7 w-7 text-sky-500 mr-3" />
-                <h2 className="text-2xl font-semibold text-gray-800">Material Gerado</h2>
+              <div className="flex items-center"><DocumentTextIcon className="h-7 w-7 text-sky-400 mr-3" />
+                <h2 className="text-2xl font-semibold text-slate-100">Material Gerado</h2>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={handleDownloadPdf} disabled={isDownloadingPdf || !summary} className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 text-sm font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed">
+                <button 
+                  onClick={handleDownloadPdf} 
+                  disabled={isDownloadingPdf || !summary} 
+                  className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-800 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg shadow-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                   {isDownloadingPdf ? (<><svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Gerando...</>) : (<><DownloadIcon className="h-5 w-5 mr-2" />Baixar PDF</>)}
                 </button>
-                <button onClick={handleCopy} disabled={isDownloadingPdf} className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 text-sm font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200 disabled:opacity-60">
-                  {copied ? (<><CheckCircleIcon className="h-5 w-5 mr-2 text-green-500" />Copiado!</>) : (<><ClipboardIcon className="h-5 w-5 mr-2" />Copiar</>)}
+                <button 
+                  onClick={handleCopy} 
+                  disabled={isDownloadingPdf} 
+                  className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-800 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg shadow-sm transition-colors duration-200 disabled:opacity-50">
+                  {copied ? (<><CheckCircleIcon className="h-5 w-5 mr-2 text-green-400" />Copiado!</>) : (<><ClipboardIcon className="h-5 w-5 mr-2" />Copiar</>)}
                 </button>
               </div>
             </div>
-            <div className="prose prose-sm sm:prose-base prose-gray max-w-none p-4 bg-gray-50 rounded-lg whitespace-pre-wrap text-gray-700 overflow-x-auto">{summary}</div>
+            <div className="prose prose-sm sm:prose-base prose-invert max-w-none p-4 bg-slate-900/50 rounded-lg whitespace-pre-wrap text-slate-300 overflow-x-auto">{summary}</div>
           </div>
         );
       };
@@ -493,35 +489,40 @@ ${content}
         const handleTextareaChange = (e) => { onInputChange(e.target.value); if (fileName) setFileName(null); if (fileError) setFileError(null); };
 
         return (
-          <div className="bg-white shadow-lg rounded-xl p-6 sm:p-8 border border-gray-200">
+          <div className="bg-slate-800 shadow-xl rounded-xl p-6 sm:p-8 border border-slate-700">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
               <div className="flex items-center mb-3 sm:mb-0">
-                <BookOpenIcon className="h-7 w-7 text-sky-500 mr-3" />
-                <h2 className="text-2xl font-semibold text-gray-800">Insira seu Conteúdo</h2>
+                <BookOpenIcon className="h-7 w-7 text-sky-400 mr-3" />
+                <h2 className="text-2xl font-semibold text-slate-100">Insira seu Conteúdo</h2>
               </div>
               <div className="flex flex-col items-start sm:items-end">
                 <input type="file" id="file-upload" ref={fileInputRef} className="hidden" accept={acceptedFileTypes} onChange={handleFileChange} disabled={isLoading} multiple />
-                <label htmlFor="file-upload" className={`flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-medium rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all duration-200 cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} role="button" tabIndex={isLoading ? -1 : 0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();}}>
+                <label 
+                  htmlFor="file-upload" 
+                  className={`flex items-center justify-center px-4 py-2 border border-sky-500 text-sky-400 hover:bg-sky-500 hover:text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 transition-all duration-200 cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                  role="button" tabIndex={isLoading ? -1 : 0} 
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();}}
+                >
                   <UploadIcon className="h-5 w-5 mr-2" />Anexar Arquivo(s)
                 </label>
-                {fileName && (<p className="text-xs text-sky-600 mt-1 truncate max-w-xs sm:max-w-sm md:max-w-md" title={fileName}>{`Carregado${fileName.includes(',')?'s':''}: ${fileName}`}</p>)}
+                {fileName && (<p className="text-xs text-sky-400 mt-1 truncate max-w-xs sm:max-w-sm md:max-w-md" title={fileName}>{`Carregado${fileName.includes(',')?'s':''}: ${fileName}`}</p>)}
               </div>
             </div>
-            {fileError && (<p className="text-sm text-red-600 mb-3" role="alert">{fileError}</p>)}
-            <p className="text-gray-600 mb-4 text-sm">
+            {fileError && (<p className="text-sm text-red-400 mb-3" role="alert">{fileError}</p>)}
+            <p className="text-slate-400 mb-4 text-sm">
               Cole seu texto abaixo, escreva diretamente ou anexe arquivos (.txt, .md, .pdf, etc.). A IA irá processá-lo para criar um material de estudo com resumo, e questões.
             </p>
-            <textarea value={inputText} onChange={handleTextareaChange} placeholder="Digite, cole o conteúdo ou anexe arquivo(s) acima..." className="w-full h-64 p-4 bg-gray-50 text-gray-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow duration-200 resize-y placeholder-gray-400" disabled={isLoading} aria-label="Área de entrada de conteúdo"></textarea>
+            <textarea value={inputText} onChange={handleTextareaChange} placeholder="Digite, cole o conteúdo ou anexe arquivo(s) acima..." className="w-full h-64 p-4 bg-slate-700 text-slate-100 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow duration-200 resize-y placeholder-slate-400" disabled={isLoading} aria-label="Área de entrada de conteúdo"></textarea>
             <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-slate-500">
                 <p>{inputText.length} caracteres</p>
                 {!isApiKeySet && (
-                  <button onClick={onConfigureApiKeyClick} className="text-amber-600 hover:text-amber-700 text-xs mt-1 flex items-center underline focus:outline-none focus:ring-1 focus:ring-amber-500 rounded">
+                  <button onClick={onConfigureApiKeyClick} className="text-amber-400 hover:text-amber-300 text-xs mt-1 flex items-center underline focus:outline-none focus:ring-1 focus:ring-amber-500 rounded">
                     <KeyIcon className="h-4 w-4 mr-1 inline-block" />Chave de API não configurada. <span className="font-semibold ml-1">Clique aqui para configurar.</span>
                   </button>
                 )}
               </div>
-              <button onClick={onSummarize} disabled={isLoading || !inputText.trim() || !isApiKeySet} className="flex items-center justify-center px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto" aria-live="polite">
+              <button onClick={onSummarize} disabled={isLoading || !inputText.trim() || !isApiKeySet} className="flex items-center justify-center px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto" aria-live="polite">
                 {isLoading ? (<><svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processando...</>) : (<><SparklesIcon className="h-5 w-5 mr-2" />Gerar Material de Estudo</>)}
               </button>
             </div>
@@ -556,30 +557,29 @@ ${content}
         const toggleApiKeyModal = () => setIsApiKeyModalOpen(!isApiKeyModalOpen);
 
         return (
-          <div className="min-h-screen flex flex-col items-center p-4 sm:p-8 selection:bg-sky-300 selection:text-sky-900"> {/* bg-gray-50 text-gray-800 já está no body */}
+          <div className="min-h-screen flex flex-col items-center p-4 sm:p-8 selection:bg-sky-500/30 selection:text-sky-300">
             <header className="w-full max-w-4xl mb-10 text-center">
               <div className="flex items-center justify-center mb-3 relative">
-                {/* Substituído BrainCircuitIcon por logo.png */}
-                <img src="logo.png" alt="Sentio AI Logo" className="h-10 w-auto mr-3" /> {/* Ajuste h-10 w-auto para manter proporção */}
-                <h1 className="text-4xl sm:text-5xl font-bold text-gray-800">Sentio AI</h1>
+                <img src="logo.png" alt="Sentio AI Logo" className="h-10 w-auto mr-4" /> {/* Aumentei um pouco o margin-right */}
+                <h1 className="text-4xl sm:text-5xl font-bold text-slate-100">Sentio AI</h1>
                 <button 
                   onClick={toggleApiKeyModal} 
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-sky-600 transition-colors" 
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-sky-400 transition-colors" 
                   title="Configurar Chave de API Gemini"
                   aria-label="Configurar Chave de API Gemini"
                 >
                   <KeyIcon className="h-6 w-6" />
                 </button>
               </div>
-              <p className="text-lg text-gray-600">Inteligência textual que eleva seu aprendizado e sua capacidade de análise.</p>
+              <p className="text-lg text-slate-400">Inteligência textual que eleva seu aprendizado e sua capacidade de análise.</p>
             </header>
-            <main className="w-full max-w-4xl space-y-8">
+            <main className="w-full max-w-4xl space-y-10"> {/* Aumentei o space-y */}
               <ContentInputArea inputText={inputText} onInputChange={setInputText} onSummarize={handleSummarize} isLoading={isLoading} isApiKeySet={userApiKeyExists} onConfigureApiKeyClick={toggleApiKeyModal} />
               {isLoading && <LoadingIndicator />}
               {error && <ErrorMessageDisplay message={error} />}
               {summary && !isLoading && <SummaryOutputArea summary={summary} />}
             </main>
-            <footer className="w-full max-w-4xl mt-16 text-center text-gray-500 text-sm">
+            <footer className="w-full max-w-4xl mt-20 text-center text-slate-500 text-sm"> {/* Aumentei o margin-top */}
                 <p>&copy; {new Date().getFullYear()} Sentio AI. Todos os direitos reservados.</p>
                 <p className="mt-1">Desenvolvido por Vinicius de Paiva Marti.</p>
             </footer>
