@@ -27,8 +27,8 @@
         "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
         "@google/genai": "https://esm.sh/@google/genai@^1.3.0",
         "jspdf": "https://esm.sh/jspdf@^2.5.1",
-        "pdfjs-dist/build/pdf.mjs": "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.mjs",
-        "pdfjs-dist/build/pdf.worker.mjs": "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.mjs"
+        "pdfjs-dist/build/pdf.mjs": "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.mjs"
+        // Não precisamos mais mapear o worker.mjs aqui se vamos usar o URL direto
       }
     }
     </script>
@@ -41,9 +41,10 @@
       import ReactDOM from 'react-dom/client';
       import { GoogleGenAI } from "@google/genai";
       import jsPDF from 'jspdf';
-      // Importando PDF.js
+      
+      // Importando PDF.js e configurando o workerSrc com URL direto
       const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/build/pdf.mjs");
-      GlobalWorkerOptions.workerSrc = await import("pdfjs-dist/build/pdf.worker.mjs");
+      GlobalWorkerOptions.workerSrc = "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
 
 
       // --- START OF ICON COMPONENTS ---
@@ -101,6 +102,7 @@
       // --- END OF ICON COMPONENTS ---
 
       // --- START OF geminiAIService.ts LOGIC ---
+      // (Mantido como na versão anterior que carregou a página)
       const geminiModelName = "gemini-2.5-flash-preview-04-17"; 
 
       async function generateSummaryService(content) {
@@ -108,7 +110,7 @@
           console.error("generateSummaryService foi chamada com conteúdo inválido ou vazio. Conteúdo recebido:", content);
           throw new Error("O conteúdo fornecido para análise está vazio ou é inválido. Por favor, insira ou anexe um texto válido.");
         }
-        // console.log("Texto recebido em generateSummaryService:", content); // Mantenha para depuração se necessário
+        // console.log("Texto recebido em generateSummaryService:", content);
 
         const userApiKey = localStorage.getItem('userGeminiApiKey');
         if (!userApiKey) {
@@ -157,7 +159,7 @@ Texto para analisar e estruturar:
 ${content}
 ---
 `;
-        // console.log("Prompt completo enviado para a API:", newPromptText); // Mantenha para depuração se necessário
+        // console.log("Prompt completo enviado para a API:", newPromptText); 
         
         try {
           const response = await ai.models.generateContent({ model: geminiModelName, contents: newPromptText });
@@ -208,6 +210,7 @@ ${content}
       // --- END OF geminiAIService.ts LOGIC ---
 
       // --- START OF UI COMPONENTS ---
+      // (LoadingIndicator, ErrorMessageDisplay, ApiKeyModal, SummaryOutputArea permanecem como na versão anterior)
       const LoadingIndicator = () => (
         <div className="flex flex-col items-center justify-center p-8 bg-slate-800 shadow-xl rounded-xl border border-slate-700">
           <svg className="animate-spin h-10 w-10 text-sky-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -397,7 +400,6 @@ ${content}
         const [fileName, setFileName] = useState(null);
         const [fileError, setFileError] = useState(null);
         const fileInputRef = useRef(null);
-        // Adicionando .pdf aos tipos de arquivo aceitos
         const acceptedFileTypes = ".txt,.md,.rtf,.html,.xml,.json,.csv,.tsv,.js,.ts,.py,.java,.c,.cpp,.cs,.php,.rb,.swift,.kt,.go,.rs,.pl,.sh,.css,.scss,.less,.pdf";
         
         const handleFileChange = async (event) => {
@@ -409,15 +411,15 @@ ${content}
           let anyFileFailed = false;
           let unsupportedFiles = [];
 
-          const processFile = async (file) => {
+          // Envolvendo o processamento de cada arquivo em uma Promise
+          const fileProcessingPromises = Array.from(files).map(file => {
             return new Promise(async (resolve, reject) => {
               try {
                 if (file.type === "application/pdf") {
-                  console.log(`Processando PDF: ${file.name}`);
                   const reader = new FileReader();
-                  reader.onload = async (e) => {
+                  reader.onload = async (e_pdf) => { // Renomeado para evitar conflito com 'e' externo
                     try {
-                      const typedArray = new Uint8Array(e.target.result);
+                      const typedArray = new Uint8Array(e_pdf.target.result);
                       const pdfDoc = await getDocument(typedArray).promise;
                       let pdfText = "";
                       for (let i = 1; i <= pdfDoc.numPages; i++) {
@@ -425,57 +427,56 @@ ${content}
                         const textContent = await page.getTextContent();
                         pdfText += textContent.items.map(item => item.str).join(" ") + "\n";
                       }
-                      console.log(`Texto extraído do PDF ${file.name}:`, pdfText.substring(0, 200) + "...");
-                      resolve({ name: file.name, text: pdfText });
+                      resolve({ name: file.name, text: pdfText.trim(), status: 'fulfilled' });
                     } catch (pdfError) {
                       console.error(`Erro ao processar PDF ${file.name}:`, pdfError);
-                      reject(new Error(`Falha ao extrair texto do PDF: ${file.name}. O arquivo pode estar corrompido ou protegido.`));
+                      resolve({ name: file.name, text: "", status: 'rejected', reason: `Falha ao extrair texto do PDF: ${file.name}.` });
                     }
                   };
                   reader.onerror = () => {
                     console.error(`Erro ao ler o arquivo PDF ${file.name} como ArrayBuffer.`);
-                    reject(new Error(`Erro ao ler o arquivo PDF: ${file.name}`));
+                    resolve({ name: file.name, text: "", status: 'rejected', reason: `Erro ao ler o arquivo PDF: ${file.name}` });
                   }
                   reader.readAsArrayBuffer(file);
-                } else if (acceptedFileTypes.split(',').some(type => file.name.endsWith(type) || file.type.startsWith(type.replace('.', '')))) {
-                  console.log(`Processando arquivo de texto: ${file.name}`);
+                } else if (acceptedFileTypes.split(',').some(type => file.name.endsWith(type.trim()) || (file.type && file.type.startsWith(type.trim().replace('.', '')) && type.trim() !== '.pdf' ) )) {
                   const reader = new FileReader();
-                  reader.onload = (e) => {
-                     console.log(`Texto extraído de ${file.name}:`, (e.target.result || "").substring(0,200) + "...");
-                     resolve({ name: file.name, text: e.target.result });
+                  reader.onload = (e_text) => { // Renomeado para evitar conflito
+                     resolve({ name: file.name, text: e_text.target.result || "", status: 'fulfilled' });
                   }
                   reader.onerror = () => {
                      console.error(`Erro ao ler o arquivo de texto ${file.name}.`);
-                     reject(new Error(`Erro ao ler o arquivo: ${file.name}`));
+                     resolve({ name: file.name, text: "", status: 'rejected', reason: `Erro ao ler o arquivo: ${file.name}` });
                   }
                   reader.readAsText(file);
                 } else {
-                  console.warn(`Tipo de arquivo não suportado diretamente para extração de texto: ${file.name} (tipo: ${file.type})`);
+                  console.warn(`Tipo de arquivo não suportado diretamente para extração de texto: ${file.name} (tipo: ${file.type || 'desconhecido'})`);
                   unsupportedFiles.push(file.name);
-                  resolve({ name: file.name, text: "", unsupported: true }); // Resolve para não quebrar o Promise.allSettled
+                  resolve({ name: file.name, text: "", status: 'fulfilled', unsupported: true }); // Marcar como 'fulfilled' mas sem texto útil
                 }
               } catch (generalError) {
                  console.error(`Erro geral ao processar arquivo ${file.name}:`, generalError);
-                 reject(new Error(`Erro inesperado ao processar ${file.name}`));
+                 resolve({ name: file.name, text: "", status: 'rejected', reason: `Erro inesperado ao processar ${file.name}`});
               }
             });
-          };
+          });
 
-          const results = await Promise.allSettled(Array.from(files).map(processFile));
+          const results = await Promise.all(fileProcessingPromises); // Usar Promise.all para aguardar todas
           
           results.forEach(result => {
-            if (result.status === 'fulfilled' && result.value && !result.value.unsupported) {
-              combinedText += (combinedText ? "\n\n---\n\n" : "") + result.value.text;
-              successfullyLoadedFileNames.push(result.value.name);
-            } else if (result.status === 'rejected' || (result.value && result.value.unsupported)) {
+            if (result.status === 'fulfilled' && !result.unsupported && result.text.trim()) {
+              combinedText += (combinedText ? "\n\n---\n\n" : "") + result.text.trim();
+              successfullyLoadedFileNames.push(result.name);
+            } else if (result.status === 'rejected') {
               anyFileFailed = true;
-              if (result.reason) console.error("Falha ao processar o arquivo:", result.reason.message);
+              console.error("Falha ao processar o arquivo:", result.name, result.reason);
+            } else if (result.unsupported) {
+              // Já tratado por unsupportedFiles
             }
           });
           
           let currentFileError = null;
           if (unsupportedFiles.length > 0) {
-            currentFileError = `Arquivos não suportados para extração automática de texto: ${unsupportedFiles.join(', ')}. Tente copiar e colar o conteúdo.`;
+            currentFileError = `Arquivos não suportados para extração automática de texto: ${unsupportedFiles.join(', ')}. Para estes, tente copiar e colar o conteúdo.`;
             if (anyFileFailed && successfullyLoadedFileNames.length > 0) {
                 currentFileError += " Outros arquivos podem ter falhado ou sido lidos com sucesso.";
             } else if (anyFileFailed) {
@@ -486,7 +487,7 @@ ${content}
           }
           setFileError(currentFileError);
           
-          onInputChange(combinedText); 
+          onInputChange(combinedText.trim()); 
           setFileName(successfullyLoadedFileNames.length > 0 ? successfullyLoadedFileNames.join(', ') : null);
           if (fileInputRef.current) fileInputRef.current.value = ""; 
         };
