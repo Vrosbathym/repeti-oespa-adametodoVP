@@ -7,36 +7,22 @@
     <link rel="icon" href="logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        /* Configuração da imagem de fundo */
-        background-image: url('fundo.png');
-        background-size: cover; /* Faz a imagem cobrir toda a área */
-        background-position: center center; /* Centraliza a imagem */
-        background-repeat: no-repeat; /* Evita que a imagem se repita */
-        background-attachment: fixed; /* Mantém o fundo fixo ao rolar a página */
-        min-height: 100vh; /* Garante que o corpo ocupe pelo menos toda a altura da tela */
-      }
-      /* Opcional: Adicione um overlay escuro se o texto ficar difícil de ler sobre a imagem de fundo
-         Descomente e ajuste a cor e opacidade (ex: rgba(0, 0, 0, 0.5) para preto 50%) se necessário.
-      body::before {
-        content: "";
-        position: fixed; 
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background-color: rgba(22, 33, 55, 0.3); 
-        z-index: -1; 
-      }
-      */
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-      @keyframes modal-scale-in {
-          from { transform: scale(0.95); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
-        .animate-modal-scale-in {
-          animation: modal-scale-in 0.3s forwards cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-    </style>
+        <style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background-image: url('fundo.png');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  /* O overlay está comentado, então não deve causar problemas */
+  /* body::before { ... } */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  @keyframes modal-scale-in { /* ... */ }
+  .animate-modal-scale-in { /* ... */ }
+</style>
     <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
     <script type="importmap">
     {
