@@ -37,10 +37,11 @@
     <script type="text/babel" data-presets="react,typescript" data-type="module">
       import React, { useState, useCallback, useEffect, useRef } from 'react';
       import ReactDOM from 'react-dom/client';
-      import { GoogleGenerativeAI } from "@google/genai"; // Corrected import name
+      import { GoogleGenAI } from "@google/genai"; // Using user's original import
       import jsPDF from 'jspdf';
 
       // --- START OF ICON COMPONENTS ---
+      // (Ícones SVG permanecem os mesmos do seu arquivo original)
       const BrainCircuitIcon = (props) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
           <path d="M12 2a4.5 4.5 0 0 0-4.5 4.5V10H6v4h1.5v2.5A4.5 4.5 0 0 0 12 21a4.5 4.5 0 0 0 4.5-4.5V14H18v-4h-1.5V6.5A4.5 4.5 0 0 0 12 2Z" /><path d="M6 10h0" /><path d="M18 10h0" /><path d="M12 5.5A2.5 2.5 0 0 0 9.5 8" /><path d="M14.5 8A2.5 2.5 0 0 0 12 5.5" /><path d="M12 18.5A2.5 2.5 0 0 0 14.5 16" /><path d="M9.5 16A2.5 2.5 0 0 0 12 18.5" /><path d="M6.5 12H5" /><path d="M17.5 12H19" /><path d="M12 12h4.5" /><path d="M12 12H7.5" /><path d="M10 14h4" /><path d="M10 10h4" />
@@ -94,18 +95,19 @@
       // --- END OF ICON COMPONENTS ---
 
       // --- START OF geminiAIService.ts LOGIC ---
-      const geminiModelName = "gemini-1.5-flash-latest"; // Using latest flash model as specific version might change
+      // Using the model name from your original working file
+      const geminiModelName = "gemini-2.5-flash-preview-04-17"; 
+
       async function generateSummaryService(content) {
         const userApiKey = localStorage.getItem('userGeminiApiKey');
         if (!userApiKey) {
           throw new Error("Nenhuma chave de API do Gemini foi configurada. Por favor, clique no ícone de chave 🔑 para adicionar sua chave.");
         }
-        // Correctly initialize the Gemini AI client
-        const genAI = new GoogleGenerativeAI(userApiKey);
-        const model = genAI.getGenerativeModel({ model: geminiModelName });
+        // Using your original way of initializing and calling the API
+        const ai = new GoogleGenAI({ apiKey: userApiKey }); 
 
         // New prompt for Spaced Repetition and Question Generation
-        const promptText = `
+        const newPromptText = `
 Você é um assistente de IA especializado em criar materiais de estudo otimizados para retenção de conteúdo usando o método de REPETIÇÃO ESPAÇADA e na elaboração de QUESTÕES para autoavaliação.
 Sua tarefa é analisar o texto fornecido e gerar dois tipos de material:
 
@@ -146,12 +148,12 @@ ${content}
 ---
 `;
         try {
-          const result = await model.generateContent(promptText);
-          const apiResponse = await result.response;
-          let processedText = apiResponse.text();
+          // Using your original API call structure
+          const response = await ai.models.generateContent({ model: geminiModelName, contents: newPromptText });
+          let processedText = response.text; // Using your original way of getting text
 
-          // Simplified post-processing: Gemini API can be instructed to avoid preambles.
-          // However, as a safeguard, we can still strip common preambles if they appear.
+          // Simplified post-processing for the new prompt structure
+          // (The new prompt instructs the AI to avoid preambles, so this is a safeguard)
           const commonIntros = [
             "Okay, here is the material based on your request:",
             "Okay, here are the study materials:",
@@ -159,40 +161,51 @@ ${content}
             "Aqui estão os materiais de estudo otimizados:",
             "Claro, aqui está o material no formato solicitado:"
           ];
-          for (const intro of commonIntros) {
-            if (processedText.toLowerCase().startsWith(intro.toLowerCase())) {
-              processedText = processedText.substring(intro.length).trimStart();
-              break;
+          if (processedText) { // Check if processedText is not undefined
+            for (const intro of commonIntros) {
+              if (processedText.toLowerCase().startsWith(intro.toLowerCase())) {
+                processedText = processedText.substring(intro.length).trimStart();
+                break;
+              }
             }
+            processedText = processedText.replace(/^\s+/, ""); // Remove leading blank lines
+          } else {
+            // Handle case where response.text is undefined or null
+            throw new Error("A API não retornou texto na resposta (response.text está vazio).");
           }
-          // Remove any leading blank lines that might remain after stripping intros.
-          processedText = processedText.replace(/^\s+/, "");
 
-
-          if (processedText) { return processedText.trim(); }
-          else { throw new Error("A API não retornou nenhum conteúdo após o processamento."); }
+          if (processedText && processedText.trim()) { 
+            return processedText.trim(); 
+          } else { 
+            throw new Error("A API não retornou nenhum conteúdo de resumo após o processamento."); 
+          }
         } catch (error) {
+          // Using your original error handling structure, with potentially updated messages
           console.error("Error calling Gemini API with user's key:", error);
-          let errorMessage = "Falha ao comunicar com a API do Gemini. Verifique sua chave, conexão e cota.";
+          let detailedErrorMessage = "Falha ao comunicar com a API do Gemini. Verifique a chave e sua conexão.";
           if (error instanceof Error) {
-            if (error.message.includes("API key not valid") || error.message.includes("invalid api key") || (error.toString && error.toString().includes("[400 Bad Request] API key not valid"))) {
-              errorMessage = "Sua chave de API do Gemini é inválida. Por favor, verifique-a e tente novamente.";
-            } else if (error.message.includes("quota") || (error.toString && error.toString().includes("resources have been exhausted"))) {
-              errorMessage = "Sua cota da API Gemini foi excedida. Tente novamente mais tarde ou verifique sua conta Google AI Studio.";
-            } else if (error.message.includes("permission denied") || (error.toString && error.toString().includes("permission to access"))) {
-              errorMessage = `Permissão negada. Verifique se sua chave de API tem as permissões necessárias para o modelo '${geminiModelName}'.`;
-            } else if (error.message.includes("SAFETY")) {
-                errorMessage = "O conteúdo não pôde ser gerado devido às políticas de segurança. Tente reformular o texto de entrada.";
-            } else if (error.message) {
-                errorMessage = `Erro da API: ${error.message}`;
+            if (error.message.includes("API key not valid") || error.message.includes("invalid api key")) {
+              detailedErrorMessage = "Sua chave de API do Gemini é inválida. Por favor, verifique-a e tente novamente.";
+            } else if (error.message.includes("quota")) {
+              detailedErrorMessage = "Sua cota da API Gemini foi excedida. Tente novamente mais tarde ou verifique sua conta Google AI Studio.";
+            } else if (error.message.includes("permission denied")) {
+              detailedErrorMessage = `Permissão negada. Verifique se sua chave de API tem as permissões necessárias para o modelo '${geminiModelName}'.`;
+            } else if (error.message.includes("SAFETY") || (error.toString && error.toString().includes("SAFETY"))) {
+                detailedErrorMessage = "O conteúdo não pôde ser gerado devido às políticas de segurança. Tente reformular o texto de entrada.";
+            } else if (error.message.includes("response.text está vazio")){
+                detailedErrorMessage = error.message; // Use specific error message
+            } else {
+                // Fallback for other generic errors from the API call
+                detailedErrorMessage = `Erro ao chamar a API Gemini: ${error.message || 'Erro desconhecido'}`;
             }
           }
-          throw new Error(errorMessage);
+          throw new Error(detailedErrorMessage);
         }
       }
       // --- END OF geminiAIService.ts LOGIC ---
 
       // --- START OF UI COMPONENTS ---
+      // (LoadingIndicator, ErrorMessageDisplay, ApiKeyModal permanecem os mesmos do seu arquivo original)
       const LoadingIndicator = () => (
         <div className="flex flex-col items-center justify-center p-8 bg-slate-800 shadow-xl rounded-xl border border-slate-700">
           <svg className="animate-spin h-10 w-10 text-sky-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -271,16 +284,17 @@ ${content}
               const trimmedLine = line.trimEnd(); 
               pdf.setFont('helvetica', 'normal'); pdf.setFontSize(baseFontSize); 
 
-              if (trimmedLine.startsWith("**Conceito/Fato Principal:")) { // New main category
-                const title = trimmedLine.replace(/\*\*/g, "").replace("Conceito/Fato Principal:", "").trim();
-                pdf.setFontSize(h1FontSize - 2); // Slightly smaller than old H1
+              if (trimmedLine.startsWith("**Conceito/Fato Principal:")) {
+                let title = trimmedLine.substring("**Conceito/Fato Principal:".length).trim();
+                title = title.endsWith("**") ? title.substring(0, title.length - 2).trim() : title; // Remove trailing **
+                pdf.setFontSize(h1FontSize - 2); 
                 pdf.setFont('helvetica', 'bold'); pdf.setTextColor(40,40,40); 
                 const dims = pdf.getTextDimensions(title, {maxWidth: contentWidth, fontSize: h1FontSize - 2}); 
                 yPosition = addFooterAndNewPageIfNeeded(yPosition, dims.h * lineHeightMultiplier); 
                 pdf.text(title, margin, yPosition, {maxWidth: contentWidth}); 
                 yPosition += dims.h * lineHeightMultiplier + paragraphSpacing * 0.7; 
                 pdf.setTextColor(0); pdf.setFont('helvetica', 'normal');
-              } else if (trimmedLine.startsWith("### Questões de Revisão")) { // Questions section
+              } else if (trimmedLine.startsWith("### Questões de Revisão")) { 
                 const title = trimmedLine.substring(4).trim(); 
                 pdf.setFontSize(h1FontSize); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(50,50,50); 
                 const dims = pdf.getTextDimensions(title, {maxWidth: contentWidth, fontSize: h1FontSize}); 
@@ -288,77 +302,71 @@ ${content}
                 pdf.text(title, margin, yPosition, {maxWidth: contentWidth}); 
                 yPosition += dims.h * lineHeightMultiplier + paragraphSpacing * 0.8; 
                 pdf.setTextColor(0); pdf.setFont('helvetica', 'normal');
-              } else if (trimmedLine.startsWith("---")) { // Separator
-                 yPosition = addFooterAndNewPageIfNeeded(yPosition, 10 + paragraphSpacing * 0.5);
-                 pdf.setDrawColor(200, 200, 200); // Light gray line
+              } else if (trimmedLine.startsWith("---")) { 
+                 yPosition = addFooterAndNewPageIfNeeded(yPosition, 10 + paragraphSpacing * 0.2); // Smaller space for HR
+                 pdf.setDrawColor(200, 200, 200); 
                  pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-                 yPosition += 10 + paragraphSpacing * 0.5;
+                 yPosition += 10 + paragraphSpacing * 0.2;
               } else if (trimmedLine.startsWith("* **Ponto-chave/Pergunta para Lembrar:**") || trimmedLine.startsWith("* **Resposta/Informação Essencial:**")) {
-                let itemText = trimmedLine.substring(3).trim(); // Remove "* "
+                let itemTextContent = trimmedLine.substring(2).trim(); // Remove "* "
                 let prefix = "";
-                let isBoldPrefix = true;
-
-                if (itemText.startsWith("**Ponto-chave/Pergunta para Lembrar:**")) {
-                    prefix = "Pergunta para Lembrar:";
-                    itemText = itemText.substring("**Ponto-chave/Pergunta para Lembrar:**".length).trim();
-                } else if (itemText.startsWith("**Resposta/Informação Essencial:**")) {
+                
+                if (itemTextContent.startsWith("**Ponto-chave/Pergunta para Lembrar:**")) {
+                    prefix = "Ponto-chave/Pergunta:";
+                    itemTextContent = itemTextContent.substring("**Ponto-chave/Pergunta para Lembrar:**".length).trim();
+                } else if (itemTextContent.startsWith("**Resposta/Informação Essencial:**")) {
                     prefix = "Resposta Essencial:";
-                    itemText = itemText.substring("**Resposta/Informação Essencial:**".length).trim();
+                    itemTextContent = itemTextContent.substring("**Resposta/Informação Essencial:**".length).trim();
                 }
                 
-                const indent = margin + 15;
+                const indent = margin + 10; // Standard indent for these items
                 pdf.setFontSize(baseFontSize);
                 
-                // Draw prefix (bold)
+                yPosition = addFooterAndNewPageIfNeeded(yPosition, 0); // Check page before prefix
                 pdf.setFont('helvetica', 'bold');
-                const prefixDims = pdf.getTextDimensions(prefix, { fontSize: baseFontSize });
-                yPosition = addFooterAndNewPageIfNeeded(yPosition, prefixDims.h * lineHeightMultiplier);
                 pdf.text(prefix, indent, yPosition);
                 
-                // Draw item text (normal)
+                const prefixWidth = pdf.getTextWidth(prefix + " ");
                 pdf.setFont('helvetica', 'normal');
-                const itemLines = pdf.splitTextToSize(itemText, contentWidth - (indent - margin) - prefixDims.w - 5); // 5 for spacing
-                for (let i = 0; i < itemLines.length; i++) {
-                  const lineDims = pdf.getTextDimensions(itemLines[i],{fontSize: baseFontSize});
-                  if (i === 0) { // First line of itemText, render next to prefix
-                     pdf.text(itemLines[i], indent + prefixDims.w + 5, yPosition);
+                const textLines = pdf.splitTextToSize(itemTextContent, contentWidth - (indent - margin) - prefixWidth);
+                for (let i = 0; i < textLines.length; i++) {
+                  const lineDims = pdf.getTextDimensions(textLines[i],{fontSize: baseFontSize});
+                  if (i === 0) {
+                     pdf.text(textLines[i], indent + prefixWidth, yPosition);
                      yPosition += lineDims.h * lineHeightMultiplier;
-                  } else { // Subsequent lines of itemText, render below
+                  } else {
                      yPosition = addFooterAndNewPageIfNeeded(yPosition, lineDims.h * lineHeightMultiplier);
-                     pdf.text(itemLines[i], indent + prefixDims.w + 5, yPosition); // Or indent if you want it fully under prefix
+                     pdf.text(textLines[i], indent + prefixWidth, yPosition); // Indent subsequent lines relative to prefix
                      yPosition += lineDims.h * lineHeightMultiplier;
                   }
                 }
-                yPosition += paragraphSpacing * 0.3; // Small space after item
-                pdf.setFont('helvetica', 'normal');
-
-              } else if (trimmedLine.match(/^\s*\d+\.\s/)) { // Ordered lists (for questions)
+                yPosition += paragraphSpacing * 0.1; // Reduced space after item
+              } else if (trimmedLine.match(/^\s*\d+\.\s/)) { 
                 const match = trimmedLine.match(/^(\s*)(\d+\.)\s(.*)/); 
                 if (match) { 
                   const [, sp, num, txt] = match; 
                   const indentLevel = Math.floor(sp.length / 2); 
-                  const indent = margin + (indentLevel * 15); 
+                  const indent = margin + (indentLevel * 10); 
                   pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
                   const numDim = pdf.getTextDimensions(num, {fontSize: baseFontSize}); 
                   yPosition = addFooterAndNewPageIfNeeded(yPosition, numDim.h * lineHeightMultiplier); 
                   pdf.text(num, indent , yPosition); 
-                  const itemLines = pdf.splitTextToSize(txt, contentWidth - (indent - margin) - pdf.getTextWidth(num + " ") -5); 
+                  
+                  const questionTextIndent = indent + pdf.getTextWidth(num + " ");
+                  const itemLines = pdf.splitTextToSize(txt, contentWidth - (questionTextIndent - margin)); 
                   for(let i=0; i < itemLines.length; i++) { 
-                    pdf.setFont('helvetica', 'normal'); 
                     const lineDims = pdf.getTextDimensions(itemLines[i], {fontSize: baseFontSize}); 
                     if(i===0) {
-                        pdf.text(itemLines[i], indent + pdf.getTextWidth(num + " "), yPosition);
+                        pdf.text(itemLines[i], questionTextIndent, yPosition);
                     } else {
                         yPosition = addFooterAndNewPageIfNeeded(yPosition, lineDims.h * lineHeightMultiplier);
-                        pdf.text(itemLines[i], indent + pdf.getTextWidth(num + " "), yPosition);
+                        pdf.text(itemLines[i], questionTextIndent, yPosition);
                     }
-                    if(i < itemLines.length -1) yPosition += lineDims.h * lineHeightMultiplier;
+                     if (i < itemLines.length - 1) yPosition += lineDims.h * lineHeightMultiplier; else if (itemLines.length > 0) yPosition += lineDims.h * lineHeightMultiplier;
                   } 
-                  yPosition += pdf.getTextDimensions(" ", {fontSize: baseFontSize}).h * lineHeightMultiplier; 
                 } 
-                pdf.setFont('helvetica', 'normal');
-              } else if (trimmedLine) { // Regular text paragraphs (e.g. options for multiple choice)
-                const indent = trimmedLine.startsWith("    ") || trimmedLine.startsWith("  a)") || trimmedLine.startsWith("  b)") ? margin + 20 : margin; // Indent options
+              } else if (trimmedLine) { 
+                const indent = (trimmedLine.startsWith("    ") || /^\s{2,}[a-d]\)/.test(trimmedLine)) ? margin + 20 : margin;
                 pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
                 const textLines = pdf.splitTextToSize(trimmedLine.trimStart(), contentWidth - (indent - margin) ); 
                 for (const textLine of textLines) { 
@@ -367,12 +375,12 @@ ${content}
                   pdf.text(textLine, indent, yPosition); 
                   yPosition += dims.h * lineHeightMultiplier; 
                 } 
-                yPosition += paragraphSpacing * 0.5;
-              } else { // Empty lines 
+                yPosition += paragraphSpacing * 0.3; // Slightly reduced spacing for general text
+              } else { 
                 pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
                 const emptyLineH = pdf.getTextDimensions(" ", {fontSize: baseFontSize}).h * lineHeightMultiplier; 
-                yPosition = addFooterAndNewPageIfNeeded(yPosition, emptyLineH * 0.7); 
-                yPosition += emptyLineH * 0.7; 
+                yPosition = addFooterAndNewPageIfNeeded(yPosition, emptyLineH * 0.5); 
+                yPosition += emptyLineH * 0.5; 
               }
             }
             addPdfFooterInternal(pdf, pageHeight, pageWidth, margin); pdf.save('Material_Estudo_Sintese_AI.pdf');
@@ -383,6 +391,8 @@ ${content}
         );
       };
 
+      // (ContentInputArea e App permanecem os mesmos do seu arquivo original, com pequenas
+      //  alterações de texto no botão de sumário e título/descrição do app)
       const ContentInputArea = ({ inputText, onInputChange, onSummarize, isLoading, isApiKeySet, onConfigureApiKeyClick }) => {
         const [fileName, setFileName] = useState(null);
         const [fileError, setFileError] = useState(null);
@@ -412,9 +422,7 @@ ${content}
           </div>
         );
       };
-      // --- END OF UI COMPONENTS ---
 
-      // --- START OF App.tsx LOGIC ---
       const App = () => {
         const [inputText, setInputText] = useState('');
         const [summary, setSummary] = useState('');
@@ -462,7 +470,8 @@ ${content}
       const rootElement = document.getElementById('root');
       if (!rootElement) { throw new Error("Root element not found"); }
       const root = ReactDOM.createRoot(rootElement);
-      root.render(<React.StrictMode><App /></React.StrictMode>);
+      // Removido React.StrictMode temporariamente para depuração, pode ser adicionado depois
+      root.render(<App />); 
     </script>
 </body>
 </html>
