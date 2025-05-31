@@ -1,15 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="icon" href="logo.png" type="image/png">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sentio AI</title>
+    <link rel="icon" href="logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
         font-family: 'Inter', sans-serif;
+        /* Configuração da imagem de fundo */
+        background-image: url('fundo.png');
+        background-size: cover; /* Faz a imagem cobrir toda a área */
+        background-position: center center; /* Centraliza a imagem */
+        background-repeat: no-repeat; /* Evita que a imagem se repita */
+        background-attachment: fixed; /* Mantém o fundo fixo ao rolar a página */
+        min-height: 100vh; /* Garante que o corpo ocupe pelo menos toda a altura da tela */
       }
+      /* Opcional: Adicione um overlay escuro se o texto ficar difícil de ler sobre a imagem de fundo
+         Descomente e ajuste a cor e opacidade (ex: rgba(0, 0, 0, 0.5) para preto 50%) se necessário.
+      body::before {
+        content: "";
+        position: fixed; 
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(22, 33, 55, 0.3); 
+        z-index: -1; 
+      }
+      */
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
       @keyframes modal-scale-in {
           from { transform: scale(0.95); opacity: 0; }
@@ -33,8 +51,8 @@
     }
     </script>
 </head>
-{/* MODIFICAÇÃO AQUI para o fundo "Espacial" */}
-<body class="text-slate-200 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900">
+{/* Classes de fundo anteriores removidas, agora controladas pelo <style> acima. Mantido text-slate-200 */}
+<body class="text-slate-200">
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react,typescript" data-type="module">
@@ -96,9 +114,9 @@
       // --- END OF ICON COMPONENTS ---
 
       // --- START OF geminiAIService.ts LOGIC ---
+      // (Mantido como na versão anterior)
       const geminiModelName = "gemini-2.5-flash-preview-04-17";
       async function generateSummaryService(content) {
-        // ... (Lógica do generateSummaryService, incluindo o prompt, permanece a mesma da versão anterior) ...
         if (!content || typeof content !== 'string' || !content.trim()) {
           throw new Error("O conteúdo fornecido para análise está vazio ou é inválido. Por favor, insira ou anexe um texto válido.");
         }
@@ -564,16 +582,15 @@ ${content}
         const toggleApiKeyModal = () => setIsApiKeyModalOpen(!isApiKeyModalOpen);
 
         return (
-          // MODIFICAÇÃO AQUI: Removido bg-slate-900 e text-slate-200 pois virão do body
+          // MODIFICAÇÃO AQUI: Removido bg-slate-900 e text-slate-200 explícitos, pois virão do body ou serão herdados
           <div className="min-h-screen flex flex-col items-center p-4 sm:p-8 selection:bg-sky-500/30 selection:text-sky-300">
             <header className="w-full max-w-4xl mb-10 text-center">
               <div className="flex items-center justify-center mb-3 relative">
                 <img 
                   src="logo.png" 
                   alt="Sentio AI Logo" 
-                  className="h-20 w-auto mr-3" // Estilo simples para o logo
+                  className="h-24 w-auto mr-3"
                 />
-                {/* NOME "Sentio AI" COM DESTAQUE EM GRADIENTE */}
                 <h1 className="text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500">
                   Sentio AI
                 </h1>
