@@ -26,7 +26,9 @@
         "react": "https://esm.sh/react@^19.1.0",
         "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
         "@google/genai": "https://esm.sh/@google/genai@^1.3.0",
-        "jspdf": "https://esm.sh/jspdf@^2.5.1"
+        "jspdf": "https://esm.sh/jspdf@^2.5.1",
+        "pdfjs-dist/build/pdf.mjs": "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.mjs",
+        "pdfjs-dist/build/pdf.worker.mjs": "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.mjs"
       }
     }
     </script>
@@ -37,10 +39,15 @@
     <script type="text/babel" data-presets="react,typescript" data-type="module">
       import React, { useState, useCallback, useEffect, useRef } from 'react';
       import ReactDOM from 'react-dom/client';
-      import { GoogleGenAI } from "@google/genai"; // Using user's original import
+      import { GoogleGenAI } from "@google/genai";
       import jsPDF from 'jspdf';
+      // Importando PDF.js
+      const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/build/pdf.mjs");
+      GlobalWorkerOptions.workerSrc = await import("pdfjs-dist/build/pdf.worker.mjs");
+
 
       // --- START OF ICON COMPONENTS ---
+      // (Seus componentes de ícone permanecem aqui, como antes)
       const BrainCircuitIcon = (props) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
           <path d="M12 2a4.5 4.5 0 0 0-4.5 4.5V10H6v4h1.5v2.5A4.5 4.5 0 0 0 12 21a4.5 4.5 0 0 0 4.5-4.5V14H18v-4h-1.5V6.5A4.5 4.5 0 0 0 12 2Z" /><path d="M6 10h0" /><path d="M18 10h0" /><path d="M12 5.5A2.5 2.5 0 0 0 9.5 8" /><path d="M14.5 8A2.5 2.5 0 0 0 12 5.5" /><path d="M12 18.5A2.5 2.5 0 0 0 14.5 16" /><path d="M9.5 16A2.5 2.5 0 0 0 12 18.5" /><path d="M6.5 12H5" /><path d="M17.5 12H19" /><path d="M12 12h4.5" /><path d="M12 12H7.5" /><path d="M10 14h4" /><path d="M10 10h4" />
@@ -97,14 +104,11 @@
       const geminiModelName = "gemini-2.5-flash-preview-04-17"; 
 
       async function generateSummaryService(content) {
-        // **AJUSTE ADICIONADO AQUI:** Verificação explícita do conteúdo no início da função.
         if (!content || typeof content !== 'string' || !content.trim()) {
           console.error("generateSummaryService foi chamada com conteúdo inválido ou vazio. Conteúdo recebido:", content);
-          // Este erro será exibido na interface do usuário.
           throw new Error("O conteúdo fornecido para análise está vazio ou é inválido. Por favor, insira ou anexe um texto válido.");
         }
-        // Linha de depuração sugerida anteriormente (mantenha se quiser verificar)
-        console.log("Texto recebido em generateSummaryService:", content);
+        // console.log("Texto recebido em generateSummaryService:", content); // Mantenha para depuração se necessário
 
         const userApiKey = localStorage.getItem('userGeminiApiKey');
         if (!userApiKey) {
@@ -146,20 +150,20 @@ INSTRUÇÕES IMPORTANTES:
 -   Use Markdown para toda a formatação (negrito, listas, separadores).
 -   O output DEVE começar diretamente com o primeiro "**Conceito/Fato Principal:**". Não inclua nenhuma frase introdutória sua antes disso.
 -   Certifique-se de que as questões na PARTE 2 cubram diferentes aspectos do texto e incentivem o pensamento crítico, não apenas a memorização simples.
+-   Se o texto fornecido pelo usuário não for legível ou parecer ser dados brutos de um arquivo em vez de conteúdo textual, responda com a seguinte mensagem e NADA MAIS: "O texto fornecido não parece ser conteúdo textual legível para análise. Por favor, forneça um texto claro ou, se estiver carregando um arquivo, certifique-se de que é um formato de texto simples (.txt, .md) ou que o conteúdo de arquivos como PDF foi corretamente extraído como texto."
 
 Texto para analisar e estruturar:
 ---
 ${content}
 ---
 `;
-        // Linha de depuração sugerida anteriormente (mantenha se quiser verificar)
-        console.log("Prompt completo enviado para a API:", newPromptText); 
+        // console.log("Prompt completo enviado para a API:", newPromptText); // Mantenha para depuração se necessário
         
         try {
           const response = await ai.models.generateContent({ model: geminiModelName, contents: newPromptText });
           let processedText = response.text; 
 
-          if (processedText === undefined || processedText === null) { // Verificação mais robusta
+          if (processedText === undefined || processedText === null) {
             console.error("A API retornou 'response.text' como undefined ou null. Resposta completa:", response);
             throw new Error("A API não retornou texto na resposta (response.text está vazio ou nulo). Verifique o console do navegador para a resposta completa da API.");
           }
@@ -187,7 +191,6 @@ ${content}
           console.error("Erro ao chamar ou processar a API Gemini:", error);
           let detailedErrorMessage = (error instanceof Error && error.message) ? error.message : "Falha ao comunicar com a API do Gemini. Verifique a chave, conexão e o console para mais detalhes.";
           
-          // Mantendo a lógica de mensagens de erro específicas do seu código original, se aplicável
           if (error instanceof Error) {
             if (error.message.includes("API key not valid") || error.message.includes("invalid api key")) {
               detailedErrorMessage = "Sua chave de API do Gemini é inválida. Por favor, verifique-a e tente novamente.";
@@ -205,7 +208,6 @@ ${content}
       // --- END OF geminiAIService.ts LOGIC ---
 
       // --- START OF UI COMPONENTS ---
-      // (LoadingIndicator, ErrorMessageDisplay, ApiKeyModal permanecem os mesmos)
       const LoadingIndicator = () => (
         <div className="flex flex-col items-center justify-center p-8 bg-slate-800 shadow-xl rounded-xl border border-slate-700">
           <svg className="animate-spin h-10 w-10 text-sky-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -260,8 +262,6 @@ ${content}
         );
       };
 
-      // (SummaryOutputArea e ContentInputArea permanecem com a lógica de PDF e UI da versão anterior,
-      //  que carregou a página mas gerou conteúdo errado. A lógica do PDF foi mantida.)
       const SummaryOutputArea = ({ summary }) => {
         const [copied, setCopied] = useState(false);
         const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -397,26 +397,107 @@ ${content}
         const [fileName, setFileName] = useState(null);
         const [fileError, setFileError] = useState(null);
         const fileInputRef = useRef(null);
-        const acceptedFileTypes = ".txt,.md,.rtf,.html,.xml,.json,.csv,.tsv,.js,.ts,.py,.java,.c,.cpp,.cs,.php,.rb,.swift,.kt,.go,.rs,.pl,.sh,.css,.scss,.less";
+        // Adicionando .pdf aos tipos de arquivo aceitos
+        const acceptedFileTypes = ".txt,.md,.rtf,.html,.xml,.json,.csv,.tsv,.js,.ts,.py,.java,.c,.cpp,.cs,.php,.rb,.swift,.kt,.go,.rs,.pl,.sh,.css,.scss,.less,.pdf";
         
         const handleFileChange = async (event) => {
-          const files = event.target.files; if (!files || files.length === 0) return;
-          setFileError(null); let combinedText = ""; const successfullyLoadedFileNames = []; let anyFileFailed = false;
-          const readFileAsText = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => resolve({ name: file.name, text: e.target.result }); reader.onerror = () => reject(new Error(`Erro ao ler o arquivo: ${file.name}`)); reader.readAsText(file); });
-          const results = await Promise.allSettled(Array.from(files).map(readFileAsText));
-          results.forEach(result => { if (result.status === 'fulfilled') { combinedText += (combinedText ? "\n\n---\n\n" : "") + result.value.text; successfullyLoadedFileNames.push(result.value.name); } else { anyFileFailed = true; console.error("Falha ao processar o arquivo:", result.reason); }});
-          if (anyFileFailed) setFileError("Alguns arquivos não puderam ser lidos. O conteúdo dos arquivos lidos com sucesso foi carregado, se houver.");
-          else setFileError(null); 
-          onInputChange(combinedText); setFileName(successfullyLoadedFileNames.length > 0 ? successfullyLoadedFileNames.join(', ') : null);
+          const files = event.target.files; if (!files || files.length === 0) { setFileError(null); return; }
+          
+          setFileError(null);
+          let combinedText = "";
+          const successfullyLoadedFileNames = [];
+          let anyFileFailed = false;
+          let unsupportedFiles = [];
+
+          const processFile = async (file) => {
+            return new Promise(async (resolve, reject) => {
+              try {
+                if (file.type === "application/pdf") {
+                  console.log(`Processando PDF: ${file.name}`);
+                  const reader = new FileReader();
+                  reader.onload = async (e) => {
+                    try {
+                      const typedArray = new Uint8Array(e.target.result);
+                      const pdfDoc = await getDocument(typedArray).promise;
+                      let pdfText = "";
+                      for (let i = 1; i <= pdfDoc.numPages; i++) {
+                        const page = await pdfDoc.getPage(i);
+                        const textContent = await page.getTextContent();
+                        pdfText += textContent.items.map(item => item.str).join(" ") + "\n";
+                      }
+                      console.log(`Texto extraído do PDF ${file.name}:`, pdfText.substring(0, 200) + "...");
+                      resolve({ name: file.name, text: pdfText });
+                    } catch (pdfError) {
+                      console.error(`Erro ao processar PDF ${file.name}:`, pdfError);
+                      reject(new Error(`Falha ao extrair texto do PDF: ${file.name}. O arquivo pode estar corrompido ou protegido.`));
+                    }
+                  };
+                  reader.onerror = () => {
+                    console.error(`Erro ao ler o arquivo PDF ${file.name} como ArrayBuffer.`);
+                    reject(new Error(`Erro ao ler o arquivo PDF: ${file.name}`));
+                  }
+                  reader.readAsArrayBuffer(file);
+                } else if (acceptedFileTypes.split(',').some(type => file.name.endsWith(type) || file.type.startsWith(type.replace('.', '')))) {
+                  console.log(`Processando arquivo de texto: ${file.name}`);
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                     console.log(`Texto extraído de ${file.name}:`, (e.target.result || "").substring(0,200) + "...");
+                     resolve({ name: file.name, text: e.target.result });
+                  }
+                  reader.onerror = () => {
+                     console.error(`Erro ao ler o arquivo de texto ${file.name}.`);
+                     reject(new Error(`Erro ao ler o arquivo: ${file.name}`));
+                  }
+                  reader.readAsText(file);
+                } else {
+                  console.warn(`Tipo de arquivo não suportado diretamente para extração de texto: ${file.name} (tipo: ${file.type})`);
+                  unsupportedFiles.push(file.name);
+                  resolve({ name: file.name, text: "", unsupported: true }); // Resolve para não quebrar o Promise.allSettled
+                }
+              } catch (generalError) {
+                 console.error(`Erro geral ao processar arquivo ${file.name}:`, generalError);
+                 reject(new Error(`Erro inesperado ao processar ${file.name}`));
+              }
+            });
+          };
+
+          const results = await Promise.allSettled(Array.from(files).map(processFile));
+          
+          results.forEach(result => {
+            if (result.status === 'fulfilled' && result.value && !result.value.unsupported) {
+              combinedText += (combinedText ? "\n\n---\n\n" : "") + result.value.text;
+              successfullyLoadedFileNames.push(result.value.name);
+            } else if (result.status === 'rejected' || (result.value && result.value.unsupported)) {
+              anyFileFailed = true;
+              if (result.reason) console.error("Falha ao processar o arquivo:", result.reason.message);
+            }
+          });
+          
+          let currentFileError = null;
+          if (unsupportedFiles.length > 0) {
+            currentFileError = `Arquivos não suportados para extração automática de texto: ${unsupportedFiles.join(', ')}. Tente copiar e colar o conteúdo.`;
+            if (anyFileFailed && successfullyLoadedFileNames.length > 0) {
+                currentFileError += " Outros arquivos podem ter falhado ou sido lidos com sucesso.";
+            } else if (anyFileFailed) {
+                 currentFileError += " Alguns arquivos também falharam ao serem processados.";
+            }
+          } else if (anyFileFailed) {
+            currentFileError = "Alguns arquivos não puderam ser lidos ou processados. O conteúdo dos arquivos lidos com sucesso foi carregado, se houver.";
+          }
+          setFileError(currentFileError);
+          
+          onInputChange(combinedText); 
+          setFileName(successfullyLoadedFileNames.length > 0 ? successfullyLoadedFileNames.join(', ') : null);
           if (fileInputRef.current) fileInputRef.current.value = ""; 
         };
+
         const handleTextareaChange = (e) => { onInputChange(e.target.value); if (fileName) setFileName(null); if (fileError) setFileError(null); };
 
         return (
           <div className="bg-slate-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-slate-700">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4"><div className="flex items-center mb-3 sm:mb-0"><BookOpenIcon className="h-7 w-7 text-sky-400 mr-3" /><h2 className="text-2xl font-semibold text-slate-100">Insira seu Conteúdo</h2></div><div className="flex flex-col items-start sm:items-end"><input type="file" id="file-upload" ref={fileInputRef} className="hidden" accept={acceptedFileTypes} onChange={handleFileChange} disabled={isLoading} multiple /><label htmlFor="file-upload" className={`flex items-center justify-center px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-slate-100 font-medium rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-75 transition-all duration-200 cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} role="button" tabIndex={isLoading ? -1 : 0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();}}><UploadIcon className="h-5 w-5 mr-2" />Anexar Arquivo(s)</label>{fileName && (<p className="text-xs text-sky-400 mt-1 truncate max-w-xs sm:max-w-sm md:max-w-md" title={fileName}>{`Carregado${fileName.includes(',')?'s':''}: ${fileName}`}</p>)}</div></div>
             {fileError && (<p className="text-sm text-red-400 mb-3" role="alert">{fileError}</p>)}
-            <p className="text-slate-400 mb-4">Cole seu texto abaixo, escreva diretamente ou anexe um ou mais arquivos. A IA irá processá-lo para criar um material de estudo com foco em repetição espaçada e questões para autoavaliação.</p>
+            <p className="text-slate-400 mb-4">Cole seu texto abaixo, escreva diretamente ou anexe arquivos (.txt, .md, .pdf, etc.). A IA irá processá-lo para criar material de estudo.</p>
             <textarea value={inputText} onChange={handleTextareaChange} placeholder="Digite, cole o conteúdo ou anexe arquivo(s) acima..." className="w-full h-64 p-4 bg-slate-700 text-slate-200 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow duration-200 resize-none placeholder-slate-500" disabled={isLoading} aria-label="Área de entrada de conteúdo"></textarea>
             <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4 sm:gap-0"><div className="text-sm text-slate-500"><p>{inputText.length} caracteres</p>{!isApiKeySet && (<button onClick={onConfigureApiKeyClick} className="text-amber-400/90 hover:text-amber-300 text-xs mt-1 flex items-center underline focus:outline-none focus:ring-1 focus:ring-amber-500 rounded"><KeyIcon className="h-4 w-4 mr-1 inline-block" />Chave de API não configurada. <span className="font-semibold ml-1">Clique aqui para configurar.</span></button>)}</div><button onClick={onSummarize} disabled={isLoading || !inputText.trim() || !isApiKeySet} className="flex items-center justify-center px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto" aria-live="polite">{isLoading ? (<><svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processando...</>) : (<><SparklesIcon className="h-5 w-5 mr-2" />Gerar Material de Estudo</>)}</button></div>
           </div>
@@ -436,8 +517,6 @@ ${content}
         const handleSummarize = useCallback(async () => {
           if (!userApiKeyExists) { setError('Por favor, configure sua chave de API do Gemini para gerar o material.'); setIsApiKeyModalOpen(true); return; }
           
-          // Esta verificação é crucial. Se ela não estiver funcionando como esperado,
-          // a função generateSummaryService pode ser chamada com inputText vazio.
           if (!inputText || !inputText.trim()) { 
             setError('Por favor, insira algum conteúdo para gerar o material de estudo.'); 
             return; 
