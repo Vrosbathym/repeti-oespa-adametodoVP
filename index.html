@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Síntese AI: Revisor de Conteúdo Otimizado</title>
+    <title>Síntese AI: Material de Estudo Inteligente</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
@@ -40,14 +40,11 @@
       import ReactDOM from 'react-dom/client';
       import { GoogleGenAI } from "@google/genai";
       import jsPDF from 'jspdf';
-      
       // Importando PDF.js e configurando o workerSrc com URL direto
       const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/build/pdf.mjs");
       GlobalWorkerOptions.workerSrc = "https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
 
-
       // --- START OF ICON COMPONENTS ---
-      // (Seus componentes de ícone permanecem aqui, como antes)
       const BrainCircuitIcon = (props) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
           <path d="M12 2a4.5 4.5 0 0 0-4.5 4.5V10H6v4h1.5v2.5A4.5 4.5 0 0 0 12 21a4.5 4.5 0 0 0 4.5-4.5V14H18v-4h-1.5V6.5A4.5 4.5 0 0 0 12 2Z" /><path d="M6 10h0" /><path d="M18 10h0" /><path d="M12 5.5A2.5 2.5 0 0 0 9.5 8" /><path d="M14.5 8A2.5 2.5 0 0 0 12 5.5" /><path d="M12 18.5A2.5 2.5 0 0 0 14.5 16" /><path d="M9.5 16A2.5 2.5 0 0 0 12 18.5" /><path d="M6.5 12H5" /><path d="M17.5 12H19" /><path d="M12 12h4.5" /><path d="M12 12H7.5" /><path d="M10 14h4" /><path d="M10 10h4" />
@@ -101,115 +98,113 @@
       // --- END OF ICON COMPONENTS ---
 
       // --- START OF geminiAIService.ts LOGIC ---
-      // (Mantido como na versão anterior que carregou a página)
-      const geminiModelName = "gemini-2.5-flash-preview-04-17"; 
-
+      const geminiModelName = "gemini-2.5-flash-preview-04-17"; // Using your original model name
       async function generateSummaryService(content) {
         if (!content || typeof content !== 'string' || !content.trim()) {
-          console.error("generateSummaryService foi chamada com conteúdo inválido ou vazio. Conteúdo recebido:", content);
           throw new Error("O conteúdo fornecido para análise está vazio ou é inválido. Por favor, insira ou anexe um texto válido.");
         }
-        // console.log("Texto recebido em generateSummaryService:", content);
 
         const userApiKey = localStorage.getItem('userGeminiApiKey');
         if (!userApiKey) {
           throw new Error("Nenhuma chave de API do Gemini foi configurada. Por favor, clique no ícone de chave 🔑 para adicionar sua chave.");
         }
-        const ai = new GoogleGenAI({ apiKey: userApiKey }); 
+        const ai = new GoogleGenAI({ apiKey: userApiKey }); // Your original initialization
 
-        const newPromptText = `
-Você é um assistente de IA especializado em criar materiais de estudo otimizados para retenção de conteúdo usando o método de REPETIÇÃO ESPAÇADA e na elaboração de QUESTÕES para autoavaliação.
+        // New prompt including questions
+        const promptText = `
+Você é um assistente de IA especializado em criar materiais de estudo e apresentação com formatação profissional.
 Sua tarefa é analisar o texto fornecido e gerar dois tipos de material:
 
-PARTE 1: CONTEÚDO ESTRUTURADO PARA REPETIÇÃO ESPAÇADA
-Identifique os conceitos, fatos e informações mais importantes do texto. Para cada um deles, apresente-o no seguinte formato, ideal para ser transformado em flashcards ou usado em sistemas de repetição espaçada:
+PARTE 1: DOCUMENTO ESTRUTURADO
+O documento DEVE SEGUIR ESTRITAMENTE A SEGUINTE ESTRUTURA para cada seção principal identificada no texto:
 
-**Conceito/Fato Principal: [Nome do Conceito/Fato em Negrito]**
-* **Ponto-chave/Pergunta para Lembrar:** [Uma pergunta direta ou um ponto-chave que o estudante deve ser capaz de responder ou explicar sobre o conceito/fato. Ex: "Quais são as três principais características de X?" ou "Defina Y."]
-* **Resposta/Informação Essencial:** [A resposta concisa e completa para a pergunta acima, ou os detalhes essenciais do ponto-chave. Ideal para o 'verso' de um flashcard.]
+## TÍTULO DA SEÇÃO/TÓPICO PRINCIPAL
+[Conteúdo detalhado da seção/tópico, explicando os pontos principais, argumentos, evidências, etc. Mantenha uma linguagem formal e profissional. Separe parágrafos com uma linha em branco.]
+
 ---
 
-[Repita o formato acima para cada conceito/fato principal identificado no texto. Use '---' como separador entre cada bloco.]
+PARTE 2: QUESTÕES PARA TESTAR O CONHECIMENTO
+Com base no conteúdo integral do texto fornecido na PARTE 1, gere EXATAMENTE 10 questões (podem ser dissertativas, de múltipla escolha, ou uma combinação) que permitam ao estudante testar seu conhecimento e compreensão do material. Se gerar questões de múltipla escolha, indique a resposta correta entre parênteses, por exemplo: (Correta). Formate as questões claramente.
 
-PARTE 2: QUESTÕES PARA AUTOAVALIAÇÃO
-Com base no conteúdo integral do texto fornecido, gere uma lista de 5 a 7 questões dissertativas ou de múltipla escolha que permitam ao estudante testar seu conhecimento e compreensão do material. Se gerar questões de múltipla escolha, indique a resposta correta entre parênteses ao lado da opção correta, por exemplo: (Correta).
+### Perguntas de Revisão
 
-### Questões de Revisão
+[Liste as 10 questões aqui.]
 
-[Liste as questões aqui. Exemplo:
-1.  Explique o impacto de A em B, com base no texto.
-2.  Quais são os principais desafios mencionados para a implementação de C?
-3.  (Múltipla Escolha) Qual das seguintes afirmações sobre Z é VERDADEIRA de acordo com o texto?
-    a) Opção 1
-    b) Opção 2 (Correta)
-    c) Opção 3
-    d) Opção 4
-]
-
-INSTRUÇÕES IMPORTANTES:
--   Na PARTE 1, seja conciso mas completo na "Resposta/Informação Essencial".
--   Use Markdown para toda a formatação (negrito, listas, separadores).
--   O output DEVE começar diretamente com o primeiro "**Conceito/Fato Principal:**". Não inclua nenhuma frase introdutória sua antes disso.
--   Certifique-se de que as questões na PARTE 2 cubram diferentes aspectos do texto e incentivem o pensamento crítico, não apenas a memorização simples.
+INSTRUÇÕES IMPORTANTES GERAIS:
+-   Para a PARTE 1, NÃO inclua nenhuma frase introdutória ou conclusiva sua antes do primeiro "## TÍTULO DA SEÇÃO" ou após o último mapa mental da PARTE 1. A PARTE 1 deve começar diretamente com o primeiro título de seção.
+-   Use Markdown para toda a formatação (títulos, listas, negrito).
+-   A PARTE 2 (Perguntas de Revisão) deve vir APÓS todo o conteúdo da PARTE 1 e ser claramente separada pela linha horizontal "---".
 -   Se o texto fornecido pelo usuário não for legível ou parecer ser dados brutos de um arquivo em vez de conteúdo textual, responda com a seguinte mensagem e NADA MAIS: "O texto fornecido não parece ser conteúdo textual legível para análise. Por favor, forneça um texto claro ou, se estiver carregando um arquivo, certifique-se de que é um formato de texto simples (.txt, .md) ou que o conteúdo de arquivos como PDF foi corretamente extraído como texto."
+-    O gabarito deve estar em uma pagina separada das questões. 
 
 Texto para analisar e estruturar:
 ---
 ${content}
 ---
 `;
-        // console.log("Prompt completo enviado para a API:", newPromptText); 
-        
         try {
-          const response = await ai.models.generateContent({ model: geminiModelName, contents: newPromptText });
-          let processedText = response.text; 
+          // Your original API call structure
+          const response = await ai.models.generateContent({ model: geminiModelName, contents: promptText });
+          let processedText = response.text; // Your original way of getting text
 
           if (processedText === undefined || processedText === null) {
-            console.error("A API retornou 'response.text' como undefined ou null. Resposta completa:", response);
-            throw new Error("A API não retornou texto na resposta (response.text está vazio ou nulo). Verifique o console do navegador para a resposta completa da API.");
+            throw new Error("A API não retornou texto na resposta (response.text está vazio ou nulo).");
           }
-          
-          const commonIntros = [
-            "Okay, here is the material based on your request:", "Okay, here are the study materials:",
-            "Aqui está o material de estudo:", "Aqui estão os materiais de estudo otimizados:",
-            "Claro, aqui está o material no formato solicitado:"
-          ];
+
+          // Using your original post-processing, which should still work for PARTE 1
+          const specificPrefixPattern = /^Okay, aqui está o resumo detalhado baseado no texto fornecido,.*?elaboração de respostas dissertativas:\s*\n?(?:\*\*(.*?)\*\*\s*?\n?)?/im;
+          processedText = processedText.replace(specificPrefixPattern, "").trimStart();
+          const commonIntros = ["Aqui está o resumo detalhado e estruturado:", "Claro, aqui está o resumo no formato solicitado:"];
           for (const intro of commonIntros) {
             if (processedText.toLowerCase().startsWith(intro.toLowerCase())) {
               processedText = processedText.substring(intro.length).trimStart();
+              processedText = processedText.replace(/^\s*\*\*(.*?)\*\*\s*?\n?/, "").trimStart();
               break;
             }
           }
-          processedText = processedText.replace(/^\s+/, "");
-
-          if (processedText && processedText.trim()) { 
-            return processedText.trim(); 
-          } else { 
-            console.warn("API retornou texto, mas ele ficou vazio após o processamento. Texto original:", response.text);
-            throw new Error("A API não retornou nenhum conteúdo de resumo útil após o processamento."); 
+          // This part of post-processing might need to be less strict if PARTE 1 is empty but PARTE 2 (questions) is present.
+          // For now, we keep it as is, assuming PARTE 1 will usually be generated.
+          if (!processedText.startsWith("## ") && processedText.includes("## ") && !processedText.includes("### Perguntas de Revisão")) {
+             // Only re-align if it seems like the start of PARTE 1 is missing and it's not already at the questions
+            const lines = processedText.split('\n');
+            let firstHeadingIndex = -1;
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].startsWith("## ")) { firstHeadingIndex = i; break; }
+            }
+            if (firstHeadingIndex !== -1 && firstHeadingIndex > 0) { // only slice if there's something before the first "##"
+                processedText = lines.slice(firstHeadingIndex).join('\n');
+            }
+          } else if (!processedText.startsWith("## ") && !processedText.includes("## ") && !processedText.startsWith("**Conceito/Fato Principal:") && !processedText.includes("### Perguntas de Revisão")) {
+            // Added check for new prompt format elements to avoid unnecessary warnings if the AI follows new structure.
+            // If it's not starting with any known primary element...
+            console.warn("AI response does not start with a recognized main heading. Outputting as received.");
           }
+
+          if (processedText && processedText.trim()) { return processedText.trim(); }
+          else { throw new Error("A API não retornou nenhum conteúdo de material de estudo após o processamento."); }
         } catch (error) {
-          console.error("Erro ao chamar ou processar a API Gemini:", error);
-          let detailedErrorMessage = (error instanceof Error && error.message) ? error.message : "Falha ao comunicar com a API do Gemini. Verifique a chave, conexão e o console para mais detalhes.";
-          
+          // Your original error handling
+          console.error("Error calling Gemini API with user's key:", error);
           if (error instanceof Error) {
             if (error.message.includes("API key not valid") || error.message.includes("invalid api key")) {
-              detailedErrorMessage = "Sua chave de API do Gemini é inválida. Por favor, verifique-a e tente novamente.";
-            } else if (error.message.includes("quota")) {
-              detailedErrorMessage = "Sua cota da API Gemini foi excedida. Tente novamente mais tarde ou verifique sua conta Google AI Studio.";
-            } else if (error.message.includes("permission denied")) {
-              detailedErrorMessage = `Permissão negada. Verifique se sua chave de API tem as permissões necessárias para o modelo '${geminiModelName}'.`;
-            } else if (error.message.includes("SAFETY") || (error.toString && error.toString().includes("SAFETY"))) {
-                detailedErrorMessage = "O conteúdo não pôde ser gerado devido às políticas de segurança. Tente reformular o texto de entrada.";
+              throw new Error("Sua chave de API do Gemini é inválida. Por favor, verifique-a e tente novamente.");
+            }
+            if (error.message.includes("quota")) {
+              throw new Error("Sua cota da API Gemini foi excedida. Tente novamente mais tarde ou verifique sua conta Google AI Studio.");
+            }
+            if (error.message.includes("permission denied")) {
+              throw new Error("Permissão negada. Verifique se sua chave de API tem as permissões necessárias para o modelo 'gemini-2.5-flash-preview-04-17'.");
+            }
+             if (error.message.includes("SAFETY") || (error.toString && error.toString().includes("SAFETY"))) {
+                throw new Error("O conteúdo não pôde ser gerado devido às políticas de segurança. Tente reformular o texto de entrada.");
             }
           }
-          throw new Error(detailedErrorMessage);
+          throw new Error(`Falha ao comunicar com a API do Gemini: ${error.message || 'Erro desconhecido'}`);
         }
       }
       // --- END OF geminiAIService.ts LOGIC ---
 
       // --- START OF UI COMPONENTS ---
-      // (LoadingIndicator, ErrorMessageDisplay, ApiKeyModal, SummaryOutputArea permanecem como na versão anterior)
       const LoadingIndicator = () => (
         <div className="flex flex-col items-center justify-center p-8 bg-slate-800 shadow-xl rounded-xl border border-slate-700">
           <svg className="animate-spin h-10 w-10 text-sky-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -226,7 +221,7 @@ ${content}
       const ApiKeyModal = ({ isOpen, onClose, onApiKeyUpdated }) => {
         const [apiKeyInput, setApiKeyInput] = useState('');
         const [currentApiKeyMasked, setCurrentApiKeyMasked] = useState(null);
-        const [saveStatus, setSaveStatus] = useState('idle'); 
+        const [saveStatus, setSaveStatus] = useState('idle');
         const [errorMessage, setErrorMessage] = useState(null);
 
         const maskApiKey = (key) => key.length <= 8 ? '••••••••' : `••••••••••••••••${key.substring(key.length - 4)}`;
@@ -251,13 +246,13 @@ ${content}
 
         if (!isOpen) return null;
         return (
-          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 ease-out animate-modal-scale-in" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="apiKeyModalTitle">
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 ease-out animate-modal-scale-in" onClick={onClose} role="dialog">
             <div className="bg-slate-800 p-6 sm:p-8 rounded-xl shadow-2xl border border-slate-700 w-full max-w-md transform transition-all duration-300 ease-out" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6"><div className="flex items-center"><KeyIcon className="h-7 w-7 text-sky-400 mr-3" /><h2 id="apiKeyModalTitle" className="text-2xl font-semibold text-slate-100">Configurar Chave de API</h2></div><button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300 rounded-full hover:bg-slate-700" aria-label="Fechar modal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+              <div className="flex items-center justify-between mb-6"><div className="flex items-center"><KeyIcon className="h-7 w-7 text-sky-400 mr-3" /><h2 className="text-2xl font-semibold text-slate-100">Configurar Chave de API</h2></div><button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300 rounded-full hover:bg-slate-700"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
               {currentApiKeyMasked && saveStatus !== 'success' && (<div className="mb-4 p-3 bg-slate-700/50 rounded-lg"><p className="text-sm text-slate-400">Chave de API atual:</p><p className="text-lg text-sky-300 font-mono tracking-wider">{currentApiKeyMasked}</p><button onClick={handleClearKey} className="mt-2 text-xs text-amber-500 hover:text-amber-400 hover:underline">Limpar Chave Salva</button></div>)}
               {saveStatus !== 'success' && (<div className="space-y-4"><p className="text-slate-400 text-sm">{currentApiKeyMasked ? "Para alterar, insira uma nova chave abaixo." : "Insira sua chave de API do Google Gemini para começar a usar o aplicativo."}</p><div><label htmlFor="apiKeyInput" className="block text-sm font-medium text-slate-300 mb-1">Sua Chave de API Gemini</label><input type="password" id="apiKeyInput" value={apiKeyInput} onChange={(e) => { setApiKeyInput(e.target.value); if(saveStatus !== 'idle') setSaveStatus('idle'); if(errorMessage) setErrorMessage(null); }} placeholder="Cole sua chave aqui" className="w-full p-3 bg-slate-700 text-slate-200 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-slate-500" /></div><button onClick={handleSaveKey} className="w-full flex items-center justify-center px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg">Salvar Chave</button></div>)}
-              {saveStatus === 'success' && (<div id="api-key-status-success" role="status" className="mt-4 p-4 bg-green-700/30 border border-green-600 rounded-lg text-center"><CheckCircleIcon className="h-8 w-8 text-green-400 mx-auto mb-2" /><p className="text-green-300 font-medium">Chave de API salva com sucesso!</p></div>)}
-              {saveStatus === 'error' && errorMessage && (<div id="api-key-status-error" role="alert" className="mt-4 p-4 bg-red-800/30 border border-red-700 rounded-lg text-center"><ExclamationTriangleIcon className="h-8 w-8 text-red-400 mx-auto mb-2" /><p className="text-red-300 font-medium">{errorMessage}</p></div>)}
+              {saveStatus === 'success' && (<div id="api-key-status" className="mt-4 p-4 bg-green-700/30 border border-green-600 rounded-lg text-center"><CheckCircleIcon className="h-8 w-8 text-green-400 mx-auto mb-2" /><p className="text-green-300 font-medium">Chave de API salva com sucesso!</p></div>)}
+              {saveStatus === 'error' && errorMessage && (<div id="api-key-status" className="mt-4 p-4 bg-red-800/30 border border-red-700 rounded-lg text-center"><ExclamationTriangleIcon className="h-8 w-8 text-red-400 mx-auto mb-2" /><p className="text-red-300 font-medium">{errorMessage}</p></div>)}
               <p className="mt-6 text-xs text-slate-500 text-center">Sua chave de API é armazenada apenas no seu navegador. Obtenha uma chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">Google AI Studio</a>.</p>
             </div>
           </div>
@@ -285,113 +280,103 @@ ${content}
             
             const summaryLines = summary.split('\n');
             for (const line of summaryLines) {
-              const trimmedLine = line.trimEnd(); 
+              const trimmedLine = line.trimEnd();
               pdf.setFont('helvetica', 'normal'); pdf.setFontSize(baseFontSize); 
 
-              if (trimmedLine.startsWith("**Conceito/Fato Principal:")) {
-                let title = trimmedLine.substring("**Conceito/Fato Principal:".length).trim();
-                title = title.endsWith("**") ? title.substring(0, title.length - 2).trim() : title;
-                pdf.setFontSize(h1FontSize - 2); 
-                pdf.setFont('helvetica', 'bold'); pdf.setTextColor(40,40,40); 
-                const dims = pdf.getTextDimensions(title, {maxWidth: contentWidth, fontSize: h1FontSize - 2}); 
-                yPosition = addFooterAndNewPageIfNeeded(yPosition, dims.h * lineHeightMultiplier); 
-                pdf.text(title, margin, yPosition, {maxWidth: contentWidth}); 
-                yPosition += dims.h * lineHeightMultiplier + paragraphSpacing * 0.7; 
-                pdf.setTextColor(0); pdf.setFont('helvetica', 'normal');
-              } else if (trimmedLine.startsWith("### Questões de Revisão")) { 
-                const title = trimmedLine.substring(4).trim(); 
+              if (trimmedLine.startsWith("## ")) { // PARTE 1 - Título Principal
+                const title = trimmedLine.substring(3).trim(); 
                 pdf.setFontSize(h1FontSize); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(50,50,50); 
                 const dims = pdf.getTextDimensions(title, {maxWidth: contentWidth, fontSize: h1FontSize}); 
                 yPosition = addFooterAndNewPageIfNeeded(yPosition, dims.h * lineHeightMultiplier); 
                 pdf.text(title, margin, yPosition, {maxWidth: contentWidth}); 
                 yPosition += dims.h * lineHeightMultiplier + paragraphSpacing * 0.8; 
                 pdf.setTextColor(0); pdf.setFont('helvetica', 'normal');
-              } else if (trimmedLine.startsWith("---")) { 
+              } else if (trimmedLine.startsWith("### Mapa Mental Resumido") || trimmedLine.startsWith("### Perguntas de Revisão")) { // PARTE 1 - Subtítulo ou PARTE 2 - Título Questões
+                const title = trimmedLine.substring(4).trim(); 
+                pdf.setFontSize(h2FontSize); pdf.setFont('helvetica', 'bold'); pdf.setTextColor(70,70,70); 
+                const dims = pdf.getTextDimensions(title, {maxWidth: contentWidth, fontSize: h2FontSize}); 
+                yPosition = addFooterAndNewPageIfNeeded(yPosition, dims.h * lineHeightMultiplier); 
+                pdf.text(title, margin, yPosition, {maxWidth: contentWidth}); 
+                yPosition += dims.h * lineHeightMultiplier + paragraphSpacing * 0.6; 
+                pdf.setTextColor(0); pdf.setFont('helvetica', 'normal');
+              } else if (trimmedLine.startsWith("---")) { // Separador entre PARTE 1 e PARTE 2
                  yPosition = addFooterAndNewPageIfNeeded(yPosition, 10 + paragraphSpacing * 0.2);
-                 pdf.setDrawColor(200, 200, 200); 
+                 pdf.setDrawColor(180, 180, 180); // Slightly darker gray line
                  pdf.line(margin, yPosition, pageWidth - margin, yPosition);
                  yPosition += 10 + paragraphSpacing * 0.2;
-              } else if (trimmedLine.startsWith("* **Ponto-chave/Pergunta para Lembrar:**") || trimmedLine.startsWith("* **Resposta/Informação Essencial:**")) {
-                let itemTextContent = trimmedLine.substring(2).trim(); 
-                let prefix = "";
+              } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) { // Listas (mapa mental ou opções de múltipla escolha)
+                const leadingSpacesCount = (trimmedLine.match(/^(\s*)(-|\*)\s/) || ["", ""])[1].length; 
+                let itemText = trimmedLine.substring(leadingSpacesCount + 2); 
+                const indent = margin + 15 + (leadingSpacesCount * 10); 
+                let isBold = false; 
+                const boldMatch = itemText.match(/^\*\*(.*?)\*\*$/); 
+                if (boldMatch && boldMatch[1]) { itemText = boldMatch[1]; isBold = true; }
                 
-                if (itemTextContent.startsWith("**Ponto-chave/Pergunta para Lembrar:**")) {
-                    prefix = "Ponto-chave/Pergunta:";
-                    itemTextContent = itemTextContent.substring("**Ponto-chave/Pergunta para Lembrar:**".length).trim();
-                } else if (itemTextContent.startsWith("**Resposta/Informação Essencial:**")) {
-                    prefix = "Resposta Essencial:";
-                    itemTextContent = itemTextContent.substring("**Resposta/Informação Essencial:**".length).trim();
-                }
+                pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', isBold ? 'bold' : 'normal'); 
+                const bullet = "•"; 
+                const bulletDims = pdf.getTextDimensions(bullet, {fontSize: baseFontSize}); 
+                yPosition = addFooterAndNewPageIfNeeded(yPosition, bulletDims.h * lineHeightMultiplier); 
+                pdf.text(bullet, indent - 10, yPosition);
                 
-                const indent = margin + 10;
-                pdf.setFontSize(baseFontSize);
-                
-                yPosition = addFooterAndNewPageIfNeeded(yPosition, 0); 
-                pdf.setFont('helvetica', 'bold');
-                pdf.text(prefix, indent, yPosition);
-                
-                const prefixWidth = pdf.getTextWidth(prefix + " ");
-                pdf.setFont('helvetica', 'normal');
-                const textLines = pdf.splitTextToSize(itemTextContent, contentWidth - (indent - margin) - prefixWidth);
-                for (let i = 0; i < textLines.length; i++) {
-                  const lineDims = pdf.getTextDimensions(textLines[i],{fontSize: baseFontSize});
-                  if (i === 0) {
-                     pdf.text(textLines[i], indent + prefixWidth, yPosition);
-                     yPosition += lineDims.h * lineHeightMultiplier;
-                  } else {
-                     yPosition = addFooterAndNewPageIfNeeded(yPosition, lineDims.h * lineHeightMultiplier);
-                     pdf.text(textLines[i], indent + prefixWidth, yPosition);
-                     yPosition += lineDims.h * lineHeightMultiplier;
+                const itemLines = pdf.splitTextToSize(itemText, contentWidth - (indent - margin) - pdf.getTextWidth(bullet + "  "));
+                for (let i = 0; i < itemLines.length; i++) { 
+                  pdf.setFont('helvetica', isBold ? 'bold' : 'normal'); 
+                  const lineDims = pdf.getTextDimensions(itemLines[i],{fontSize: baseFontSize}); 
+                  if (i > 0) {
+                      yPosition += lineDims.h * lineHeightMultiplier; // Increment first for subsequent lines
+                      yPosition = addFooterAndNewPageIfNeeded(yPosition, 0); // Then check if new page is needed
                   }
+                  pdf.text(itemLines[i], indent, yPosition);
+                  if (i < itemLines.length -1) {} // Don't increment yPosition here, do it before next line or after loop
                 }
-                yPosition += paragraphSpacing * 0.1; 
-              } else if (trimmedLine.match(/^\s*\d+\.\s/)) { 
+                yPosition += pdf.getTextDimensions(" ", {fontSize: baseFontSize}).h * lineHeightMultiplier; // Ensure y moves down for next item
+                pdf.setFont('helvetica', 'normal');
+
+              } else if (trimmedLine.match(/^\s*\d+\.\s/)) { // Listas numeradas (para as questões)
                 const match = trimmedLine.match(/^(\s*)(\d+\.)\s(.*)/); 
                 if (match) { 
                   const [, sp, num, txt] = match; 
-                  const indentLevel = Math.floor(sp.length / 2); 
-                  const indent = margin + (indentLevel * 10); 
+                  const indent = margin + 15 + (sp.length * 10); 
                   pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
                   const numDim = pdf.getTextDimensions(num, {fontSize: baseFontSize}); 
                   yPosition = addFooterAndNewPageIfNeeded(yPosition, numDim.h * lineHeightMultiplier); 
-                  pdf.text(num, indent , yPosition); 
+                  pdf.text(num, indent - 10, yPosition); 
                   
-                  const questionTextIndent = indent + pdf.getTextWidth(num + " ");
-                  const itemLines = pdf.splitTextToSize(txt, contentWidth - (questionTextIndent - margin)); 
+                  const itemLines = pdf.splitTextToSize(txt, contentWidth - (indent - margin) - pdf.getTextWidth(num + " ") -5); 
                   for(let i=0; i < itemLines.length; i++) { 
+                    pdf.setFont('helvetica', 'normal'); 
                     const lineDims = pdf.getTextDimensions(itemLines[i], {fontSize: baseFontSize}); 
-                    if(i===0) {
-                        pdf.text(itemLines[i], questionTextIndent, yPosition);
-                    } else {
-                        yPosition = addFooterAndNewPageIfNeeded(yPosition, lineDims.h * lineHeightMultiplier);
-                        pdf.text(itemLines[i], questionTextIndent, yPosition);
+                    if (i > 0) {
+                         yPosition += lineDims.h * lineHeightMultiplier;
+                         yPosition = addFooterAndNewPageIfNeeded(yPosition, 0);
                     }
-                     if (i < itemLines.length - 1) yPosition += lineDims.h * lineHeightMultiplier; else if (itemLines.length > 0) yPosition += lineDims.h * lineHeightMultiplier;
-                  } 
-                } 
-              } else if (trimmedLine) { 
-                const indent = (trimmedLine.startsWith("    ") || /^\s{2,}[a-d]\)/.test(trimmedLine)) ? margin + 20 : margin;
+                    pdf.text(itemLines[i], indent + pdf.getTextWidth(num + " "), yPosition); 
+                  }
+                  yPosition += pdf.getTextDimensions(" ", {fontSize: baseFontSize}).h * lineHeightMultiplier;
+                }
+                 pdf.setFont('helvetica', 'normal');
+              } else if (trimmedLine) { // Texto regular
                 pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
-                const textLines = pdf.splitTextToSize(trimmedLine.trimStart(), contentWidth - (indent - margin) ); 
+                const textLines = pdf.splitTextToSize(trimmedLine, contentWidth); 
                 for (const textLine of textLines) { 
                   const dims = pdf.getTextDimensions(textLine, {fontSize: baseFontSize}); 
                   yPosition = addFooterAndNewPageIfNeeded(yPosition, dims.h * lineHeightMultiplier); 
-                  pdf.text(textLine, indent, yPosition); 
+                  pdf.text(textLine, margin, yPosition); 
                   yPosition += dims.h * lineHeightMultiplier; 
                 } 
-                yPosition += paragraphSpacing * 0.3;
-              } else { 
+                yPosition += paragraphSpacing * 0.5;
+              } else { // Linhas em branco
                 pdf.setFontSize(baseFontSize); pdf.setFont('helvetica', 'normal'); 
                 const emptyLineH = pdf.getTextDimensions(" ", {fontSize: baseFontSize}).h * lineHeightMultiplier; 
-                yPosition = addFooterAndNewPageIfNeeded(yPosition, emptyLineH * 0.5); 
-                yPosition += emptyLineH * 0.5; 
+                yPosition = addFooterAndNewPageIfNeeded(yPosition, emptyLineH * 0.7); 
+                yPosition += emptyLineH * 0.7; 
               }
             }
             addPdfFooterInternal(pdf, pageHeight, pageWidth, margin); pdf.save('Material_Estudo_Sintese_AI.pdf');
-          } catch (e) { console.error("PDF gen error:", e); alert("Erro ao gerar PDF. A formatação pode não estar otimizada para este novo tipo de resumo."); } finally { setIsDownloadingPdf(false); }
+          } catch (e) { console.error("PDF gen error:", e); alert("Erro ao gerar PDF."); } finally { setIsDownloadingPdf(false); }
         };
         return (
-          <div className="bg-slate-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-slate-700"><div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-3 sm:gap-0"><div className="flex items-center"><DocumentTextIcon className="h-7 w-7 text-emerald-400 mr-3" /><h2 className="text-2xl font-semibold text-slate-100">Material de Estudo Gerado</h2></div><div className="flex items-center gap-3"><button onClick={handleDownloadPdf} disabled={isDownloadingPdf || !summary} className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed">{isDownloadingPdf ? (<><svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Gerando...</>) : (<><DownloadIcon className="h-5 w-5 mr-2" />Baixar PDF</>)}</button><button onClick={handleCopy} disabled={isDownloadingPdf} className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200 disabled:opacity-60">{copied ? (<><CheckCircleIcon className="h-5 w-5 mr-2 text-emerald-400" />Copiado!</>) : (<><ClipboardIcon className="h-5 w-5 mr-2" />Copiar</>)}</button></div></div><div className="prose prose-sm sm:prose-base prose-invert max-w-none p-4 bg-slate-700/50 rounded-lg whitespace-pre-wrap text-slate-200 overflow-x-auto">{summary}</div></div>
+          <div className="bg-slate-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-slate-700"><div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-3 sm:gap-0"><div className="flex items-center"><DocumentTextIcon className="h-7 w-7 text-emerald-400 mr-3" /><h2 className="text-2xl font-semibold text-slate-100">Material Gerado</h2></div><div className="flex items-center gap-3"><button onClick={handleDownloadPdf} disabled={isDownloadingPdf || !summary} className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed">{isDownloadingPdf ? (<><svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Gerando...</>) : (<><DownloadIcon className="h-5 w-5 mr-2" />Baixar PDF</>)}</button><button onClick={handleCopy} disabled={isDownloadingPdf} className="flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-slate-100 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200 disabled:opacity-60">{copied ? (<><CheckCircleIcon className="h-5 w-5 mr-2 text-emerald-400" />Copiado!</>) : (<><ClipboardIcon className="h-5 w-5 mr-2" />Copiar</>)}</button></div></div><div className="prose prose-sm sm:prose-base prose-invert max-w-none p-4 bg-slate-700/50 rounded-lg whitespace-pre-wrap text-slate-200">{summary}</div></div>
         );
       };
 
@@ -399,6 +384,7 @@ ${content}
         const [fileName, setFileName] = useState(null);
         const [fileError, setFileError] = useState(null);
         const fileInputRef = useRef(null);
+        // Adicionado .pdf à lista de tipos aceitos
         const acceptedFileTypes = ".txt,.md,.rtf,.html,.xml,.json,.csv,.tsv,.js,.ts,.py,.java,.c,.cpp,.cs,.php,.rb,.swift,.kt,.go,.rs,.pl,.sh,.css,.scss,.less,.pdf";
         
         const handleFileChange = async (event) => {
@@ -410,13 +396,12 @@ ${content}
           let anyFileFailed = false;
           let unsupportedFiles = [];
 
-          // Envolvendo o processamento de cada arquivo em uma Promise
           const fileProcessingPromises = Array.from(files).map(file => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => { // Removido reject para simplificar o allSettled-like behavior
               try {
                 if (file.type === "application/pdf") {
                   const reader = new FileReader();
-                  reader.onload = async (e_pdf) => { // Renomeado para evitar conflito com 'e' externo
+                  reader.onload = async (e_pdf) => {
                     try {
                       const typedArray = new Uint8Array(e_pdf.target.result);
                       const pdfDoc = await getDocument(typedArray).promise;
@@ -433,24 +418,21 @@ ${content}
                     }
                   };
                   reader.onerror = () => {
-                    console.error(`Erro ao ler o arquivo PDF ${file.name} como ArrayBuffer.`);
                     resolve({ name: file.name, text: "", status: 'rejected', reason: `Erro ao ler o arquivo PDF: ${file.name}` });
                   }
                   reader.readAsArrayBuffer(file);
                 } else if (acceptedFileTypes.split(',').some(type => file.name.endsWith(type.trim()) || (file.type && file.type.startsWith(type.trim().replace('.', '')) && type.trim() !== '.pdf' ) )) {
                   const reader = new FileReader();
-                  reader.onload = (e_text) => { // Renomeado para evitar conflito
+                  reader.onload = (e_text) => {
                      resolve({ name: file.name, text: e_text.target.result || "", status: 'fulfilled' });
                   }
                   reader.onerror = () => {
-                     console.error(`Erro ao ler o arquivo de texto ${file.name}.`);
                      resolve({ name: file.name, text: "", status: 'rejected', reason: `Erro ao ler o arquivo: ${file.name}` });
                   }
                   reader.readAsText(file);
                 } else {
-                  console.warn(`Tipo de arquivo não suportado diretamente para extração de texto: ${file.name} (tipo: ${file.type || 'desconhecido'})`);
                   unsupportedFiles.push(file.name);
-                  resolve({ name: file.name, text: "", status: 'fulfilled', unsupported: true }); // Marcar como 'fulfilled' mas sem texto útil
+                  resolve({ name: file.name, text: "", status: 'fulfilled', unsupported: true });
                 }
               } catch (generalError) {
                  console.error(`Erro geral ao processar arquivo ${file.name}:`, generalError);
@@ -459,17 +441,15 @@ ${content}
             });
           });
 
-          const results = await Promise.all(fileProcessingPromises); // Usar Promise.all para aguardar todas
+          const results = await Promise.all(fileProcessingPromises);
           
           results.forEach(result => {
-            if (result.status === 'fulfilled' && !result.unsupported && result.text.trim()) {
+            if (result.status === 'fulfilled' && !result.unsupported && result.text && result.text.trim()) {
               combinedText += (combinedText ? "\n\n---\n\n" : "") + result.text.trim();
               successfullyLoadedFileNames.push(result.name);
             } else if (result.status === 'rejected') {
               anyFileFailed = true;
               console.error("Falha ao processar o arquivo:", result.name, result.reason);
-            } else if (result.unsupported) {
-              // Já tratado por unsupportedFiles
             }
           });
           
@@ -497,13 +477,15 @@ ${content}
           <div className="bg-slate-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-slate-700">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4"><div className="flex items-center mb-3 sm:mb-0"><BookOpenIcon className="h-7 w-7 text-sky-400 mr-3" /><h2 className="text-2xl font-semibold text-slate-100">Insira seu Conteúdo</h2></div><div className="flex flex-col items-start sm:items-end"><input type="file" id="file-upload" ref={fileInputRef} className="hidden" accept={acceptedFileTypes} onChange={handleFileChange} disabled={isLoading} multiple /><label htmlFor="file-upload" className={`flex items-center justify-center px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-slate-100 font-medium rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-75 transition-all duration-200 cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} role="button" tabIndex={isLoading ? -1 : 0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();}}><UploadIcon className="h-5 w-5 mr-2" />Anexar Arquivo(s)</label>{fileName && (<p className="text-xs text-sky-400 mt-1 truncate max-w-xs sm:max-w-sm md:max-w-md" title={fileName}>{`Carregado${fileName.includes(',')?'s':''}: ${fileName}`}</p>)}</div></div>
             {fileError && (<p className="text-sm text-red-400 mb-3" role="alert">{fileError}</p>)}
-            <p className="text-slate-400 mb-4">Cole seu texto abaixo, escreva diretamente ou anexe arquivos (.txt, .md, .pdf, etc.). A IA irá processá-lo para criar material de estudo.</p>
+            <p className="text-slate-400 mb-4">Cole seu texto abaixo, escreva diretamente ou anexe arquivos (.txt, .md, .pdf, etc.). A IA irá processá-lo para criar um material de estudo com resumo, mapa mental e questões.</p>
             <textarea value={inputText} onChange={handleTextareaChange} placeholder="Digite, cole o conteúdo ou anexe arquivo(s) acima..." className="w-full h-64 p-4 bg-slate-700 text-slate-200 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow duration-200 resize-none placeholder-slate-500" disabled={isLoading} aria-label="Área de entrada de conteúdo"></textarea>
             <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4 sm:gap-0"><div className="text-sm text-slate-500"><p>{inputText.length} caracteres</p>{!isApiKeySet && (<button onClick={onConfigureApiKeyClick} className="text-amber-400/90 hover:text-amber-300 text-xs mt-1 flex items-center underline focus:outline-none focus:ring-1 focus:ring-amber-500 rounded"><KeyIcon className="h-4 w-4 mr-1 inline-block" />Chave de API não configurada. <span className="font-semibold ml-1">Clique aqui para configurar.</span></button>)}</div><button onClick={onSummarize} disabled={isLoading || !inputText.trim() || !isApiKeySet} className="flex items-center justify-center px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto" aria-live="polite">{isLoading ? (<><svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processando...</>) : (<><SparklesIcon className="h-5 w-5 mr-2" />Gerar Material de Estudo</>)}</button></div>
           </div>
         );
       };
+      // --- END OF UI COMPONENTS ---
 
+      // --- START OF App.tsx LOGIC ---
       const App = () => {
         const [inputText, setInputText] = useState('');
         const [summary, setSummary] = useState('');
@@ -513,36 +495,26 @@ ${content}
         const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
         useEffect(() => { const storedApiKey = localStorage.getItem('userGeminiApiKey'); setUserApiKeyExists(!!storedApiKey); }, []);
-        
         const handleSummarize = useCallback(async () => {
           if (!userApiKeyExists) { setError('Por favor, configure sua chave de API do Gemini para gerar o material.'); setIsApiKeyModalOpen(true); return; }
-          
-          if (!inputText || !inputText.trim()) { 
-            setError('Por favor, insira algum conteúdo para gerar o material de estudo.'); 
-            return; 
-          }
-          
+          if (!inputText.trim()) { setError('Por favor, insira algum conteúdo para gerar o material de estudo.'); return; }
           setIsLoading(true); setError(null); setSummary('');
-          try { 
-            const result = await generateSummaryService(inputText); 
-            setSummary(result); 
-          }
+          try { const result = await generateSummaryService(inputText); setSummary(result); }
           catch (err) { 
             if (err instanceof Error) { setError(err.message || 'Ocorreu um erro ao gerar o material de estudo.'); } 
             else { setError('Ocorreu um erro desconhecido.'); }
-            console.error("Error generating study material (in App component):", err); 
+            console.error("Error generating material:", err); 
           }
           finally { setIsLoading(false); }
         }, [inputText, userApiKeyExists]);
-
-        const handleApiKeyUpdated = () => { const storedApiKey = localStorage.getItem('userGeminiApiKey'); setUserApiKeyExists(!!storedApiKey); if (error && error.includes("chave de API")) { setError(null); } };
+        const handleApiKeyUpdated = () => { const storedApiKey = localStorage.getItem('userGeminiApiKey'); setUserApiKeyExists(!!storedApiKey); if(error && error.includes("chave de API")) { setError(null); }};
         const toggleApiKeyModal = () => setIsApiKeyModalOpen(!isApiKeyModalOpen);
 
         return (
           <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 flex flex-col items-center p-4 sm:p-8 selection:bg-sky-500 selection:text-white">
             <header className="w-full max-w-4xl mb-8 text-center">
-              <div className="flex items-center justify-center mb-2 relative"><BrainCircuitIcon className="h-12 w-12 text-sky-400 mr-3" /><h1 className="text-4xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300">Síntese AI</h1><button onClick={toggleApiKeyModal} className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-sky-400 transition-colors" title="Configurar Chave de API Gemini" aria-label="Configurar Chave de API Gemini"><KeyIcon className="h-7 w-7" /></button></div>
-              <p className="text-lg text-slate-400">Seu assistente inteligente para criação de material de estudo otimizado.</p>
+              <div className="flex items-center justify-center mb-2 relative"><BrainCircuitIcon className="h-12 w-12 text-sky-400 mr-3" /><h1 className="text-4xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300">Síntese AI</h1><button onClick={toggleApiKeyModal} className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-sky-400 transition-colors" title="Configurar Chave de API Gemini"><KeyIcon className="h-7 w-7" /></button></div>
+              <p className="text-lg text-slate-400">Seu assistente inteligente para gerar resumos, mapas mentais e questões de estudo.</p>
             </header>
             <main className="w-full max-w-4xl space-y-8">
               <ContentInputArea inputText={inputText} onInputChange={setInputText} onSummarize={handleSummarize} isLoading={isLoading} isApiKeySet={userApiKeyExists} onConfigureApiKeyClick={toggleApiKeyModal} />
@@ -561,7 +533,7 @@ ${content}
       const rootElement = document.getElementById('root');
       if (!rootElement) { throw new Error("Root element not found"); }
       const root = ReactDOM.createRoot(rootElement);
-      root.render(<App />); 
+      root.render(<App />);
     </script>
 </body>
 </html>
