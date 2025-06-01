@@ -299,7 +299,7 @@ ${content}
         const addPdfFooterInternal = (pdfInstance, pageHeight, pageWidth, marginValue) => {
             const originalFontSize = pdfInstance.getFontSize(); const originalFont = pdfInstance.getFont();
             pdfInstance.setFontSize(9); pdfInstance.setFont('helvetica', 'italic'); pdfInstance.setTextColor(120);
-            pdfInstance.text("Gerado por Sentio AI - Vinicius de Paiva Marti", pageWidth / 2, pageHeight - marginValue / 2, { align: 'center' });
+            pdfInstance.text("Gerado por Sentio AI - Desenvolvido por Vinicius de Paiva Marti", pageWidth / 2, pageHeight - marginValue / 2, { align: 'center' });
             pdfInstance.setFontSize(originalFontSize); pdfInstance.setFont(originalFont.fontName, originalFont.fontStyle); pdfInstance.setTextColor(50, 50, 50);
         };
 
