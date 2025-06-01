@@ -112,33 +112,52 @@
         }
         const ai = new GoogleGenAI({ apiKey: userApiKey });
         const promptText = `
-Você é um assistente de IA especializado em criar materiais de estudo e apresentação com formatação profissional.
-Sua tarefa é analisar o texto fornecido e gerar dois tipos de material:
 
-PARTE 1: DOCUMENTO ESTRUTURADO
-O documento DEVE SEGUIR ESTRITAMENTE A SEGUINTE ESTRUTURA para cada seção principal identificada no texto:
+Você é um assistente de IA altamente especializado em analisar textos complexos e transformá-los em materiais de estudo e apresentação concisos, profissionais e de fácil compreensão. Sua expertise inclui identificar informações cruciais, estruturar conteúdo de forma lógica e formatar tabelas corretamente em Markdown.
 
-## TÍTULO DA SEÇÃO/TÓPICO PRINCIPAL
-[Conteúdo detalhado da seção/tópico, explicando os pontos principais, argumentos, evidências, etc. Mantenha uma linguagem formal e profissional. Separe parágrafos com uma linha em branco.]
+Sua tarefa é analisar o TEXTO FORNECIDO e gerar o seguinte material, estruturado em partes distintas:
+
+# PARTE 0: VISÃO GERAL EXECUTIVA
+[Esta seção é CRUCIAL e deve vir primeiro. Forneça um resumo conciso, porém completo, de TODO o texto original. Destaque os pontos mais críticos, as principais conclusões, os temas centrais e as informações essenciais que permitiriam a alguém obter uma compreensão macro e significativa do conteúdo rapidamente, como se fosse um sumário executivo.]
 
 ---
 
-PARTE 2: QUESTÕES PARA TESTAR O CONHECIMENTO
-Com base no conteúdo integral do texto fornecido na PARTE 1, gere EXATAMENTE 10 questões (podem ser dissertativas, de múltipla escolha, ou uma combinação) que permitam ao estudante testar seu conhecimento e compreensão do material. Se gerar questões de múltipla escolha, indique a resposta correta entre parênteses, por exemplo: (Correta). Formate as questões claramente.
+# PARTE 1: ANÁLISE DETALHADA POR TÓPICOS
+Identifique as seções ou tópicos principais no TEXTO FORNECIDO. Para CADA seção/tópico principal identificado, siga ESTRITAMENTE a estrutura abaixo:
 
-### Perguntas de Revisão
+## [TÍTULO DA SEÇÃO/TÓPICO PRINCIPAL IDENTIFICADO NO TEXTO ORIGINAL]
+[Desenvolva um conteúdo detalhado para ESTE tópico específico. Concentre-se EXCLUSIVAMENTE nas informações que REALMENTE IMPORTAM e são cruciais para o entendimento aprofundado do tópico. Explique os pontos-chave, argumentos centrais, dados relevantes (se houver) e evidências de suporte. Mantenha uma linguagem formal, clara e profissional. Use parágrafos bem definidos, separados por uma linha em branco.]
 
-[Liste as 10 questões aqui.]
+**FORMATAÇÃO DE TABELAS (IMPORTANTE):** Se você identificar QUALQUER estrutura tabular ou dados que possam ser representados como uma tabela no conteúdo de uma seção do TEXTO FORNECIDO, você DEVE reformatá-la OBRIGATORIAMENTE usando a sintaxe Markdown para tabelas. As tabelas devem ser claras e precisas.
+Exemplo de formato Markdown para tabelas:
+| Cabeçalho Coluna 1 | Cabeçalho Coluna 2 | Cabeçalho Numérico 3 |
+| :----------------- | :------------------: | -------------------: |
+| Texto aqui         | Texto Centralizado   |                 100.00 |
+| Mais texto         | Outro Texto          |                   2.30 |
+(Use a formatação de alinhamento com \`:\` conforme necessário)
 
-INSTRUÇÕES IMPORTANTES GERAIS:
--   Para a PARTE 1, NÃO inclua nenhuma frase introdutória ou conclusiva sua antes do primeiro "## TÍTULO DA SEÇÃO". A PARTE 1 deve começar diretamente com o primeiro título de seção.
--   Use Markdown para toda a formatação (títulos, listas, negrito).
--   A PARTE 2 (Perguntas de Revisão) deve vir APÓS todo o conteúdo da PARTE 1 e ser claramente separada pela linha horizontal "---".
--   Se o texto fornecido pelo usuário não for legível ou parecer ser dados brutos de um arquivo em vez de conteúdo textual, responda com a seguinte mensagem e NADA MAIS: "O texto fornecido não parece ser conteúdo textual legível para análise. Por favor, forneça um texto claro ou, se estiver carregando um arquivo, certifique-se de que é um formato de texto simples (.txt, .md) ou que o conteúdo de arquivos como PDF foi corretamente extraído como texto."
--   O gabarito deve estar em uma pagina separada das questões. 
--   Deve conter EXATAMENTE 10 questões, e em caso de questões objetivas, NAO FALAR QUAL A CORRETA NA QUESTÃO, APENAS NO GABARITO.
+[Repita a estrutura acima (## Título, Conteúdo Detalhado e Tabelas em Markdown) para CADA seção/tópico principal identificado no texto.]
 
-Texto para analisar e estruturar:
+---
+
+# PARTE 2: QUESTÕES PARA TESTAR O CONHECIMENTO
+Com base no conteúdo integral do TEXTO FORNECIDO (abordado na PARTE 0 e PARTE 1), gere EXATAMENTE 10 questões. As questões podem ser uma mistura de dissertativas e de múltipla escolha, e devem permitir ao estudante testar seu conhecimento e compreensão aprofundada do material.
+
+## Perguntas de Revisão
+
+[Liste as 10 questões aqui de forma clara e numerada.]
+
+**INSTRUÇÕES PARA AS QUESTÕES E GABARITO:**
+-   Para questões de múltipla escolha, apresente as alternativas (a, b, c, d, etc.). NÃO indique a resposta correta na própria questão.
+-   O gabarito com as respostas para TODAS as 10 questões DEVE ser fornecido em uma seção separada, APÓS todas as perguntas, e deve ser intitulado EXATAMENTE como: "## Gabarito das Perguntas de Revisão".
+
+INSTRUÇÕES GERAIS IMPORTANTES:
+-   O output DEVE começar DIRETAMENTE com o título "# PARTE 0: VISÃO GERAL EXECUTIVA". NÃO inclua nenhuma frase introdutória, prefácio ou qualquer texto seu antes deste título.
+-   Utilize Markdown para toda a formatação: títulos ('#', '##'), listas, texto em **negrito** ou *itálico* (quando apropriado para ênfase), e tabelas.
+-   Use separadores '---' (três hifens em uma linha própria) APENAS entre a PARTE 0 e a PARTE 1, e entre a PARTE 1 e a PARTE 2, como indicado.
+-   Se o TEXTO FORNECIDO pelo usuário não for legível, parecer ser dados brutos de um arquivo em vez de conteúdo textual compreensível, ou não contiver informação suficiente para realizar a tarefa, responda EXCLUSIVAMENTE com a seguinte mensagem: "O texto fornecido não parece ser conteúdo textual legível para análise ou é insuficiente. Por favor, forneça um texto claro e completo, ou se estiver carregando um arquivo, certifique-se de que o conteúdo textual foi corretamente extraído."
+
+TEXTO FORNECIDO PARA ANÁLISE:
 ---
 ${content}
 ---
