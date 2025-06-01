@@ -128,13 +128,30 @@ Identifique as seções ou tópicos principais no TEXTO FORNECIDO. Para CADA se�
 ## [TÍTULO DA SEÇÃO/TÓPICO PRINCIPAL IDENTIFICADO NO TEXTO ORIGINAL]
 [Desenvolva um conteúdo detalhado para ESTE tópico específico. Concentre-se EXCLUSIVAMENTE nas informações que REALMENTE IMPORTAM e são cruciais para o entendimento aprofundado do tópico. Explique os pontos-chave, argumentos centrais, dados relevantes (se houver) e evidências de suporte. Mantenha uma linguagem formal, clara e profissional. Use parágrafos bem definidos, separados por uma linha em branco.]
 
-**FORMATAÇÃO DE TABELAS (IMPORTANTE):** Se você identificar QUALQUER estrutura tabular ou dados que possam ser representados como uma tabela no conteúdo de uma seção do TEXTO FORNECIDO, você DEVE reformatá-la OBRIGATORIAMENTE usando a sintaxe Markdown para tabelas. As tabelas devem ser claras e precisas.
-Exemplo de formato Markdown para tabelas:
-| Cabeçalho Coluna 1 | Cabeçalho Coluna 2 | Cabeçalho Numérico 3 |
-| :----------------- | :------------------: | -------------------: |
-| Texto aqui         | Texto Centralizado   |                 100.00 |
-| Mais texto         | Outro Texto          |                   2.30 |
-(Use a formatação de alinhamento com \`:\` conforme necessário)
+**FORMATAÇÃO DE TABELAS (EXTREMAMENTE IMPORTANTE):** Sua habilidade em identificar e formatar tabelas é crucial.
+Se você encontrar QUALQUER conjunto de dados no TEXTO FORNECIDO que esteja organizado em linhas e colunas, ou que se assemelhe a uma tabela (mesmo que use espaços, traços, ou outros caracteres para delinear colunas e linhas, como no exemplo abaixo), você DEVE OBRIGATORIAMENTE converter essa estrutura para uma TABELA MARKDOWN válida e bem formatada.
+
+Exemplo de estrutura de entrada que PRECISA SER CONVERTIDA:
+| Tipo de Impacto | Descrição Principal                         | Detalhes/Exemplos             |
+| :-------------- | :------------------------------------------ | :---------------------------- |
+| **Positivo** | Crescimento econômico acelerado de 7% ao ano. | PIB cresceu a taxas médias    |
+| **Positivo** | Industrialização consolidada                | Redução da dependência de ... |
+
+Resultado ESPERADO em Markdown para o exemplo acima:
+| Tipo de Impacto | Descrição Principal                         | Detalhes/Exemplos             |
+| :-------------- | :------------------------------------------ | :---------------------------- |
+| **Positivo** | Crescimento econômico acelerado de 7% ao ano. | PIB cresceu a taxas médias    |
+| **Positivo** | Industrialização consolidada                | Redução da dependência de ... |
+
+**Instruções Detalhadas para Tabelas Markdown:**
+1.  Use pipes \`|\` para separar colunas. A tabela deve começar e terminar com um pipe em cada linha.
+2.  A primeira linha DEVE ser o cabeçalho da tabela.
+3.  A segunda linha DEVE ser a linha separadora de cabeçalho, usando hifens \`-\` (pelo menos três por coluna) e, opcionalmente, dois pontos \`:\` para controle de alinhamento (\`:---\` para alinhar à esquerda, \`---\` para padrão/esquerda, \`:---:\` para centralizar, \`---:\` para alinhar à direita). Adapte o alinhamento conforme o conteúdo das colunas originais, se discernível.
+4.  Cada linha subsequente representa uma linha da tabela.
+5.  Certifique-se de que o número de pipes e separadores de alinhamento corresponda ao número de colunas em todas as linhas (cabeçalho, separador, dados), mesmo que algumas células estejam vazias.
+6.  Preserve formatações de texto dentro das células, como **negrito** (\`**texto**\`) ou *itálico* (\`*texto*\`).
+7.  O objetivo é uma tabela Markdown "perfeita", clara, precisa e que siga a sintaxe padrão.
+Não omita nenhuma linha ou coluna da tabela original presente no texto fornecido. Evite truncar o conteúdo das células; se necessário, o conteúdo pode quebrar em várias linhas na visualização final, mas a estrutura Markdown deve ser contínua para cada célula.
 
 [Repita a estrutura acima (## Título, Conteúdo Detalhado e Tabelas em Markdown) para CADA seção/tópico principal identificado no texto.]
 
